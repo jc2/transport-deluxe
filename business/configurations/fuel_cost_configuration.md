@@ -7,6 +7,8 @@ Defines the cost of fuel per kilometer based on the truck type and specific cust
 - **Customer**: Reference to [Customer](../entities/customer.md).
 - **Fuel Cost per KM**: The monetary value (USD) to be multiplied by the distance.
 
+> **Governance Notice**: This configuration is governed by the [Configuration Management Policy](../resources/configuration_policy.md) and requires the **Cost Configurator** role.
+
 > **Decimal Notation**: All factors are expressed as decimals (e.g., 1.0 = 100%, 0.1 = 10%).
 
 ## Logic
