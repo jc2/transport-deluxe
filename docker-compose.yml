@@ -1,0 +1,27 @@
+services:
+  casdoor-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: casdoor
+      POSTGRES_USER: casdoor
+      POSTGRES_PASSWORD: casdoor
+    volumes:
+      - ./persistence/casdoor/postgres/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U casdoor -d casdoor"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  casdoor:
+    image: casbin/casdoor:latest
+    ports:
+      - "8000:8000"
+    depends_on:
+      casdoor-db:
+        condition: service_healthy
+    environment:
+      - driverName=postgres
+      - dataSourceName=host=casdoor-db user=casdoor password=casdoor dbname=casdoor port=5432 sslmode=disable
+    volumes:
+      - ./casdoor/init_data.json:/init_data.json

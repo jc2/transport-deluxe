@@ -1,0 +1,14 @@
+# PostgreSQL data directories (bind-mount contents, not code)
+persistence/casdoor/postgres/data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# OS
+.DS_Store
+*.tmp
+*.swp

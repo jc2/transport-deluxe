@@ -1,0 +1,112 @@
+{
+  "organizations": [
+    {
+      "owner": "admin",
+      "name": "transport-deluxe",
+      "displayName": "Transport Deluxe",
+      "websiteUrl": "http://localhost:8000",
+      "favicon": "",
+      "passwordType": "plain",
+      "passwordSalt": "",
+      "phonePrefix": "34",
+      "defaultAvatar": "",
+      "masterPassword": "",
+      "enableSoftDelete": false,
+      "isProfilePublic": false
+    }
+  ],
+  "applications": [
+    {
+      "owner": "admin",
+      "name": "transport-deluxe",
+      "displayName": "Transport Deluxe",
+      "logo": "",
+      "homepageUrl": "http://localhost:8000",
+      "description": "Transport Deluxe application",
+      "organization": "transport-deluxe",
+      "cert": "cert-built-in",
+      "enablePassword": true,
+      "enableSignUp": false,
+      "enableSignIn": true,
+      "enableCode": false,
+      "enableSamlCompress": false,
+      "clientId": "transport-deluxe-client",
+      "clientSecret": "transport-deluxe-secret",
+      "redirectUris": ["http://localhost:8000/callback"],
+      "tokenFormat": "JWT",
+      "expireInHours": 24,
+      "refreshExpireInHours": 0,
+      "providers": [],
+      "signinMethods": [
+        {
+          "name": "Password",
+          "displayName": "Password",
+          "rule": "All"
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "owner": "transport-deluxe",
+      "name": "test-cost-configurator",
+      "displayName": "Test Cost Configurator",
+      "password": "test123",
+      "email": "test-cost-configurator@transport-deluxe.local",
+      "phone": "",
+      "type": "normal-user",
+      "isAdmin": false,
+      "isGlobalAdmin": false,
+      "isForbidden": false,
+      "isDeleted": false
+    },
+    {
+      "owner": "transport-deluxe",
+      "name": "test-margin-configurator",
+      "displayName": "Test Margin Configurator",
+      "password": "test123",
+      "email": "test-margin-configurator@transport-deluxe.local",
+      "phone": "",
+      "type": "normal-user",
+      "isAdmin": false,
+      "isGlobalAdmin": false,
+      "isForbidden": false,
+      "isDeleted": false
+    },
+    {
+      "owner": "transport-deluxe",
+      "name": "test-predictor",
+      "displayName": "Test Predictor",
+      "password": "test123",
+      "email": "test-predictor@transport-deluxe.local",
+      "phone": "",
+      "type": "normal-user",
+      "isAdmin": false,
+      "isGlobalAdmin": false,
+      "isForbidden": false,
+      "isDeleted": false
+    }
+  ],
+  "roles": [
+    {
+      "owner": "transport-deluxe",
+      "name": "cost-configurator",
+      "displayName": "Cost Configurator",
+      "description": "Access to cost configuration endpoints",
+      "users": ["transport-deluxe/test-cost-configurator"],
+      "roles": [],
+      "domains": [],
+      "isEnabled": true
+    },
+    {
+      "owner": "transport-deluxe",
+      "name": "margin-configurator",
+      "displayName": "Margin Configurator",
+      "description": "Access to margin configuration endpoints",
+      "users": ["transport-deluxe/test-margin-configurator"],
+      "roles": [],
+      "domains": [],
+      "isEnabled": true
+    }
+  ]
+}

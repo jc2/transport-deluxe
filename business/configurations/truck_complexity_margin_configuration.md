@@ -5,6 +5,8 @@ Defines margin adjustments based on the route distance to compensate for increas
 ## Logic
 1. This configuration retrieves a factor based on the **Route distance**. All distances are integers; non-integer distances are always rounded up (ceiling) to the next whole kilometer before lookup.
 
+> **Governance Notice**: This configuration is governed by the [Configuration Management Policy](../resources/configuration_policy.md) and requires the **Margin Configurator** role.
+
 > **Decimal Notation**: All factors are expressed as decimals (e.g., 1.0 = 100%, 0.1 = 10%).
 
 2. **Application**: The factor is applied to the **Initial Base Margin**.

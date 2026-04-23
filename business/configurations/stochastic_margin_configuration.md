@@ -8,6 +8,8 @@ This is a **Stochastic Rule**, meaning its final value depends on probability di
 ## Attributes
 - **Probability Distribution**: The range of factors and their likelihood (e.g., normal distribution around a +0.02 factor).
 
+> **Governance Notice**: This configuration is governed by the [Configuration Management Policy](../resources/configuration_policy.md) and requires the **Margin Configurator** role.
+
 > **Decimal Notation**: All factors are expressed as decimals (e.g., 1.0 = 100%, 0.1 = 10%).
 
 ## Logic

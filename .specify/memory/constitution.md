@@ -1,15 +1,15 @@
 <!--
 SYNC_IMPACT_REPORT
-Version change: 1.2.0 → 1.3.0
-Modified principles:
-  - II. Layered Architecture: updated to include `steps.py` for Apache Hamilton and removing traditional OOP `service.py`.
+Version change: 1.3.0 → 1.4.0
+Modified principles: none
 Added principles:
-  - IX. Data Persistence and Auditing: requires SQLModel, asyncpg, soft deletes, versioning, and x-user tracking.
-  - X. Async HTTP Communications: requires httpx in async mode for all HTTP.
+  - XI. Docker Volume Persistence Layout: all Docker volumes MUST be bound to
+    `persistence/{component-name}/{data-type}/` at the monorepo root so that
+    persisted data is always committed and traceable within the repository.
 Added sections: none
 Removed sections: none
 Templates updated:
-  - .specify/templates/plan-template.md ✅ added checks for IX, X, updated II and Tech Stack
+  - .specify/templates/plan-template.md ✅ added Constitution Check for Principle XI
   - .specify/templates/tasks-template.md ✅ no changes needed
   - .specify/templates/spec-template.md ✅ no changes needed
 Deferred TODOs: none
@@ -146,6 +146,35 @@ Every resource stored in the database MUST include:
 
 All outbound HTTP connections MUST use `httpx` in purely asynchronous mode. Synchronous requests are strictly forbidden.
 
+### XI. Docker Volume Persistence Layout
+
+Any sub-project that uses Docker AND requires persistent storage (databases, files,
+caches, etc.) MUST bind-mount its volumes to the monorepo root under:
+
+```
+persistence/{component-name}/{data-type}/
+```
+
+Examples:
+
+```
+persistence/fuel-cost-config-service/postgres/
+persistence/fuel-cost-config-service/redis/
+```
+
+Rules:
+
+- The `persistence/` root folder MUST be committed to the repository so that all
+  persisted data is always present after a `git clone`.
+- Each component sub-folder MUST match the service name as declared in
+  `docker-compose.yml`.
+- Each data-type sub-folder MUST be named after the engine or storage technology
+  (e.g., `postgres`, `redis`, `minio`).
+- Volume paths in `docker-compose.yml` MUST use this layout exclusively. Anonymous
+  or named Docker-managed volumes are forbidden for any persisted data.
+- A `.gitkeep` file MUST be placed inside each leaf folder so empty directories are
+  tracked by Git from the first commit of the sub-project.
+
 ## Technology Stack
 
 The core stack is fixed across all sub-projects. No deviations without amending this constitution:
@@ -181,6 +210,6 @@ This constitution supersedes all other practices. Amendments require:
 4. Review of all dependent templates for consistency.
 
 All implementation plans MUST include a Constitution Check verifying compliance with
-principles I–X before work begins.
+principles I–XI before work begins.
 
-**Version**: 1.3.0 | **Ratified**: 2026-04-22 | **Last Amended**: 2026-04-23
+**Version**: 1.4.0 | **Ratified**: 2026-04-22 | **Last Amended**: 2026-04-23
