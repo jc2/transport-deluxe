@@ -11,8 +11,8 @@ Welcome to the internal Source of Truth for the **Transport Deluxe** project.
 - **Variable Margins:** Pricing logic that accounts for route specifics, truck types, and time-based discounts.
 
 ## Categories
-- [Entities](entities/README.md): Physical or conceptual objects like `Truck`, `Customer`, and `Route`.
-- [Configurations](configurations/): Human-defined rules for costs and margins.
+- [Entities](entities/README.md): Physical or conceptual objects like `Truck`, `Customer`, and [User](entities/user.md).
+- [Configurations](configurations/): Human-defined rules for costs and margins, governed by the [Configuration Management Policy](resources/configuration_policy.md).
 - [Adjustments](adjustments/): Calculated values like `Lead Time Adjustment` and `Stochastic Adjustment`.
 - [Interactions](interactions/README.md): Processes like `Price Calculation` and `Cost Estimation`.
 - [Resources](resources/README.md): External dependencies such as the `Distance Service`.

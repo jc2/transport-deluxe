@@ -5,6 +5,8 @@ The Lead Time Configuration defines the rules for urgency-based margin adjustmen
 ## Mechanism
 This is a Configuration Factor based on the difference (in integer days) between the system-generated **Current Date** and the *Shipment Date*.
 
+> **Governance Notice**: This configuration is governed by the [Configuration Management Policy](../resources/configuration_policy.md) and requires the **Margin Configurator** role.
+
 > **Note on Dates**: For simplicity, dates do not contain time components (only Year-Month-Day). The difference is always calculated as an integer number of calendar days.
 
 > **Decimal Notation**: All factors are expressed as decimals (e.g., 1.0 = 100%, 0.1 = 10%).
