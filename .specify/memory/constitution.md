@@ -1,14 +1,15 @@
 <!--
 SYNC_IMPACT_REPORT
-Version change: 1.1.0 → 1.2.0
+Version change: 1.2.0 → 1.3.0
 Modified principles:
-  - VII. Living README: extended to include root monorepo README requirement
+  - II. Layered Architecture: updated to include `steps.py` for Apache Hamilton and removing traditional OOP `service.py`.
 Added principles:
-  - VIII. Monorepo Orchestration: root docker-compose.yml registers every sub-project + deps
+  - IX. Data Persistence and Auditing: requires SQLModel, asyncpg, soft deletes, versioning, and x-user tracking.
+  - X. Async HTTP Communications: requires httpx in async mode for all HTTP.
 Added sections: none
 Removed sections: none
 Templates updated:
-  - .specify/templates/plan-template.md ✅ Constitution Check gates updated (VIII added)
+  - .specify/templates/plan-template.md ✅ added checks for IX, X, updated II and Tech Stack
   - .specify/templates/tasks-template.md ✅ no changes needed
   - .specify/templates/spec-template.md ✅ no changes needed
 Deferred TODOs: none
@@ -39,15 +40,17 @@ Every sub-project MUST follow this directory structure:
 │       └── {domain}/
 │           ├── router.py    # Endpoint declaration only — no logic
 │           ├── models.py    # Request/response/DB models and serialization
-│           └── service.py   # Business logic — bridges router and models
+│           ├── service.py   # Pipeline execution via Apache Hamilton
+│           └── steps.py     # All business logic steps implemented as functions
 └── tests/
 ```
 
 Each layer has a single, non-negotiable responsibility:
 
 - `router.py` declares endpoints and delegates immediately to the service. No logic here.
-- `service.py` contains all business logic. No direct HTTP concerns.
-- `models.py` defines all data contracts: request bodies, responses, ORM models.
+- `service.py` acts strictly as the Apache Hamilton pipeline executor orchestrating `steps.py`.
+- `steps.py` MUST contain all business logic. No classes allowed for processing logic. Each step MUST be a modular function. Every step MUST receive Pydantic models as input and return Pydantic models as output.
+- `models.py` defines all data contracts: request bodies, responses, SQLModel ORM models.
 - `tools/` holds cross-cutting utilities (DB session, structured logger). No domain logic.
 
 ### III. Uniform Error Contract
@@ -130,13 +133,28 @@ Rules:
   affecting the production database containers.
 - Ports assigned to each service MUST be documented in the root README (Principle VII).
 
+### IX. Data Persistence and Auditing
+
+All database interactions MUST be fully async and use **SQLModel** with **asyncpg**.
+Every resource stored in the database MUST include:
+- Soft delete pattern.
+- Versioning (row versions).
+- Auditability: we MUST always record who created and who deleted the entity.
+- For now, the acting user is identified from the `x-user` HTTP header; this value MUST be propagated into the database audit fields.
+
+### X. Async HTTP Communications
+
+All outbound HTTP connections MUST use `httpx` in purely asynchronous mode. Synchronous requests are strictly forbidden.
+
 ## Technology Stack
 
 The core stack is fixed across all sub-projects. No deviations without amending this constitution:
 
 - **Language**: Python (latest stable)
 - **API Framework**: FastAPI
-- **Database**: PostgreSQL
+- **Business Logic orchestration**: Apache Hamilton
+- **Database**: PostgreSQL with SQLModel and asyncpg
+- **HTTP Client**: httpx (async required)
 - **Containerization**: Docker — each sub-project ships its own `Dockerfile`
 - **Dependency management**: `pyproject.toml` per sub-project (no shared root dependencies)
 
@@ -163,6 +181,6 @@ This constitution supersedes all other practices. Amendments require:
 4. Review of all dependent templates for consistency.
 
 All implementation plans MUST include a Constitution Check verifying compliance with
-principles I–VIII before work begins.
+principles I–X before work begins.
 
-**Version**: 1.2.0 | **Ratified**: 2026-04-22 | **Last Amended**: 2026-04-22
+**Version**: 1.3.0 | **Ratified**: 2026-04-22 | **Last Amended**: 2026-04-23

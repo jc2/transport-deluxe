@@ -33,7 +33,8 @@
 
 - [ ] Sub-project has its own `pyproject.toml` and no imports from other sub-projects (Principle I)
 - [ ] Directory layout matches `src/main.py`, `src/tools/`, `src/modules/{domain}/` (Principle II)
-- [ ] Each module has exactly `router.py`, `models.py`, `service.py` with single responsibilities (Principle II)
+- [ ] Each module has exactly `router.py`, `models.py`, `service.py`, `steps.py` where `steps.py` contains Hamilton modular step functions using only Pydantic models (Principle II)
+- [ ] Apache Hamilton is used for business logic orchestration instead of typical OOP classes (Principle II)
 - [ ] All endpoints declare explicit HTTP error codes — no 500s, uniform `{status, messages}` format (Principle III)
 - [ ] Every handler has logging wired at appropriate levels (debug/info/warning/error) (Principle IV)
 - [ ] Tests are integration-only, external/black-box, one per use case, against `_tests` DB (Principle V)
@@ -42,7 +43,9 @@
 - [ ] Root `README.md` updated with this sub-project's name, purpose, and port (Principle VII)
 - [ ] Sub-project added to root `docker-compose.yml` with dependencies declared (Principle VIII)
 - [ ] `docker-compose.test.yml` (or test profile) updated so tests can run in full-stack mode (Principle VIII)
-- [ ] Tech stack is Python + FastAPI + PostgreSQL + Docker (Technology Stack)
+- [ ] All DB interaction uses fully async SQLModel + asyncpg, with soft deletes, versioning, and x-user auditing (Principle IX)
+- [ ] All HTTP connections use `httpx` in purely asynchronous mode (Principle X)
+- [ ] Tech stack is Python + FastAPI + Hamilton + SQLModel/asyncpg + PostgreSQL + httpx + Docker (Technology Stack)
 
 ## Project Structure
 
