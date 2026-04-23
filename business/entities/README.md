@@ -7,6 +7,7 @@ This section documents the core conceptual and physical objects within the Trans
 ### Core Entities
 - [Truck Type](truck_type.md): The different categories of trucks available.
 - [Customer & Subcustomer](customer.md): The hierarchical relationship of our clients.
+- [User](user.md): System actors and permissions.
 - [Route](route.md): The definition of a transport path between two points.
 - [Load](load.md): The specific cargo unit scheduled for transport.
 - [Prediction](prediction.md): The result of a price analysis session.

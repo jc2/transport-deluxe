@@ -10,6 +10,24 @@
         ".specify/scripts/bash/": true,
         ".specify/scripts/powershell/": true,
         "git add": true,
-        "git commit": true
+        "git commit": true,
+        "git push": true,
+        "gh": true,
+        "mkdir": true,
+        "/^bash \\.specify/scripts/bash/check-prerequisites\\.sh --json --paths-only 2>&1$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^bash \\.specify/scripts/bash/setup-plan\\.sh --json 2>&1$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "true": true,
+        "git rev-parse": true,
+        "touch": true,
+        "/^bash \\.specify/scripts/bash/check-prerequisites\\.sh --json --require-tasks --include-tasks 2>&1$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }

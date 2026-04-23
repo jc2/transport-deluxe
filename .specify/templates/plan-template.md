@@ -45,6 +45,7 @@
 - [ ] `docker-compose.test.yml` (or test profile) updated so tests can run in full-stack mode (Principle VIII)
 - [ ] All DB interaction uses fully async SQLModel + asyncpg, with soft deletes, versioning, and x-user auditing (Principle IX)
 - [ ] All HTTP connections use `httpx` in purely asynchronous mode (Principle X)
+- [ ] If the sub-project has Docker volumes, each volume is bind-mounted to `persistence/{component-name}/{data-type}/` at the monorepo root with a `.gitkeep` in each leaf folder (Principle XI)
 - [ ] Tech stack is Python + FastAPI + Hamilton + SQLModel/asyncpg + PostgreSQL + httpx + Docker (Technology Stack)
 
 ## Project Structure

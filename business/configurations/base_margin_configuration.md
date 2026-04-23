@@ -5,6 +5,8 @@ Defines the business-standard profitability percentage applied to different tran
 ## Attributes
 - **Margin Percent**: A decimal value (0 to 0.99) representing the desired profit margin. The system enforces a hard limit of 0.99 (99%) to prevent division-by-zero errors in the margin formula.
 
+> **Governance Notice**: This configuration is governed by the [Configuration Management Policy](../resources/configuration_policy.md) and requires the **Margin Configurator** role.
+
 > **Decimal Notation**: All factors are expressed as decimals (e.g., 0.99 = 99%, 0.1 = 10%).
 
 ## Logic

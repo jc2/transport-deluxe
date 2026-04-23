@@ -5,6 +5,8 @@ Defines the compensation factor for the driver, calculated as a percentage of th
 ## Attributes
 - **Tariff Factor**: A configurable decimal value used to calculate the driver's pay (currently defaulted to 0.50 or 50% in the system, but fully modifiable via configuration).
 
+> **Governance Notice**: This configuration is governed by the [Configuration Management Policy](../resources/configuration_policy.md) and requires the **Cost Configurator** role.
+
 > **Decimal Notation**: All factors are expressed as decimals (e.g., 1.0 = 100%, 0.1 = 10%).
 
 ## Logic
