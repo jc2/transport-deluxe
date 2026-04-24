@@ -60,3 +60,33 @@ services:
       CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
       CASDOOR_ISSUER: http://localhost:8000
       SESSION_SECRET: your-session-secret-key-here
+
+  driver-tariff-config-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: driver_tariff_config
+      POSTGRES_USER: driver_tariff_config
+      POSTGRES_PASSWORD: driver_tariff_config
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./persistence/driver-tariff-config-db/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U driver_tariff_config -d driver_tariff_config"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  driver-tariff-config:
+    build: ./driver_tariff_config
+    ports:
+      - "8002:8001"
+    depends_on:
+      driver-tariff-config-db:
+        condition: service_healthy
+      casdoor:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://driver_tariff_config:driver_tariff_config@driver-tariff-config-db/driver_tariff_config
+      CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
+      CASDOOR_ISSUER: http://localhost:8000
+      SESSION_SECRET: your-session-secret-key-here
