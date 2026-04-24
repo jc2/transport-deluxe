@@ -6,6 +6,7 @@
 |------|---------|---------|
 | 8000 | Casdoor (Identity Provider / OAuth 2.0) | Authentication & authorization |
 | 8001 | fuel-cost-config | Fuel Cost Configuration Management |
+| 8002 | driver-tariff-config | Driver Tariff Configuration Management |
 
 ---
 
@@ -15,7 +16,7 @@
 docker compose up
 ```
 
-This starts Casdoor + its database + the `fuel-cost-config` service with its database. The service will be available at `http://localhost:8001`.
+This starts Casdoor + its database, the `fuel-cost-config` service (at `http://localhost:8001`), and the `driver-tariff-config` service (at `http://localhost:8002`), along with their respective databases.
 
 To start only the identity services (useful during development):
 
@@ -27,7 +28,7 @@ docker compose up casdoor casdoor-db
 
 ## Running the tests
 
-Integration tests run against a separate test database (`fuel_cost_config_tests`). They require Casdoor to be running in order to obtain real JWT tokens.
+Integration tests run against separate dedicated test databases. They require Casdoor to be running in order to obtain real JWT tokens.
 
 ```bash
 # Start Casdoor (if not already running)
@@ -35,9 +36,12 @@ docker compose up -d casdoor casdoor-db
 
 # Run fuel-cost-config service tests
 docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test up --abort-on-container-exit fuel-cost-config-tests
+
+# Run driver-tariff-config service tests
+docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test up --abort-on-container-exit driver-tariff-config-tests
 ```
 
-The `fuel-cost-config-tests` container exits with code 0 if all tests pass.
+The test containers exit with code 0 if all tests pass.
 
 ---
 
@@ -73,10 +77,12 @@ Requires `httpx` and `python-jose`: `pip install httpx python-jose`.
 
 ## Admin UI (SQLAdmin)
 
-The `fuel-cost-config` service includes an embedded SQLAdmin interface to manage configurations.
+The services include an embedded SQLAdmin interface to manage configurations.
 
 1. Ensure the application is running: `docker compose up`
-2. Open your browser to: [http://localhost:8001/admin](http://localhost:8001/admin)
+2. Open your browser to:
+   - **Fuel Cost Config**: [http://localhost:8001/admin](http://localhost:8001/admin)
+   - **Driver Tariff Config**: [http://localhost:8002/admin](http://localhost:8002/admin)
 3. Authenticate using Casdoor credentials. You must use an account that has the `cost-configurator` role.
    - **Example Username**: `test-cost-configurator`
    - **Example Password**: `test123`

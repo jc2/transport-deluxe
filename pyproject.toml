@@ -6,10 +6,12 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "fuel-cost-config",
+    "driver-tariff-config",
 ]
 
 [tool.uv.sources]
 fuel-cost-config = { path = "fuel_cost_config", editable = true }
+driver-tariff-config = { path = "driver_tariff_config", editable = true }
 
 [dependency-groups]
 dev = [
@@ -24,6 +26,7 @@ strict = true
 [[tool.mypy.overrides]]
 module = [
     "fuel_cost_config.tests.*",
+    "driver_tariff_config.tests.*",
     "tests.*"
 ]
 disallow_untyped_defs = false
@@ -32,7 +35,9 @@ disallow_untyped_decorators = false
 [[tool.mypy.overrides]]
 module = [
     "fuel_cost_config.src.modules.fuel_cost_config.admin",
-    "fuel_cost_config.src.tools.admin_auth"
+    "driver_tariff_config.src.modules.driver_tariff_config.admin",
+    "fuel_cost_config.src.tools.admin_auth",
+    "driver_tariff_config.src.tools.admin_auth"
 ]
 ignore_errors = true
 
@@ -48,4 +53,4 @@ module = [
 ignore_missing_imports = true
 
 [tool.pyright]
-extraPaths = ["fuel_cost_config"]
+extraPaths = ["fuel_cost_config", "driver_tariff_config"]
