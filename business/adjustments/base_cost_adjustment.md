@@ -20,4 +20,4 @@ Base Cost = Distance * Fuel Rate
 - **Fuel Rate**: USD per KM from [Fuel Cost Configuration](../configurations/fuel_cost_configuration.md).
 
 ## Integration
-This is the foundational value for both [Driver Tariff Adjustment](driver_tariff_adjustment.md) and [Customer Cost Adjustment](customer_cost_adjustment.md).
+This is the foundational value for the [Driver Tariff Adjustment](driver_tariff_adjustment.md).
