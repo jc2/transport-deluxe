@@ -13,14 +13,11 @@ A prediction is not just a final price; it is a nested structure of **Adjustment
 Total operational expense calculated in [Cost Estimation](../interactions/cost_estimation.md).
 - **[Base Cost Adjustment](../adjustments/base_cost_adjustment.md)**: (Distance * Fuel Rate).
 - **[Driver Tariff Adjustment](../adjustments/driver_tariff_adjustment.md)**: (Base Cost * 0.50).
-- **[Customer Cost Adjustment](../adjustments/customer_cost_adjustment.md)**: (Base Cost * WeekDay Discount).
 
 ### 2. Margin Breakdown ([all_in_margin](all_in_margin.md))
 Total business profit calculated in [Margin Calculation](../interactions/margin_calculation.md).
 - **Initial Base Margin**: Derived from [Base Margin Configuration](../configurations/base_margin_configuration.md).
 - **[Lead Time Adjustment](../adjustments/lead_time_adjustment.md)**: (Base Margin * Lead Time Factor).
-- **[Stochastic Adjustment](../adjustments/stochastic_adjustment.md)**: (Base Margin * Stochastic Factor).
-- **[Truck Complexity Adjustment](../adjustments/truck_complexity_adjustment.md)**: (Base Margin * Complexity Factor).
 
 ### 3. Final Price
 The sum of the top-level aggregates.

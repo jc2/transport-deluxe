@@ -18,17 +18,11 @@ This section documents the core conceptual and physical objects within the Trans
 *Moved to [Configurations](../configurations/)*.
 - [Fuel Cost Configuration](../configurations/fuel_cost_configuration.md)
 - [Driver Tariff Configuration](../configurations/driver_tariff_configuration.md)
-- [Customer Cost Week Day Configuration](../configurations/customer_cost_week_day_configuration.md)
 - [Base Margin Configuration](../configurations/base_margin_configuration.md)
-- [Stochastic Margin Configuration](../configurations/stochastic_margin_configuration.md)
-- [Truck Complexity Margin Configuration](../configurations/truck_complexity_margin_configuration.md)
 - [Lead Time Configuration](../configurations/lead_time_configuration.md)
 
 ## Calculated Adjustments
 *Moved to [Adjustments](../adjustments/)*.
 - [Base Cost Adjustment](../adjustments/base_cost_adjustment.md)
-- [Customer Cost Adjustment](../adjustments/customer_cost_adjustment.md)
 - [Driver Tariff Adjustment](../adjustments/driver_tariff_adjustment.md)
 - [Lead Time Adjustment](../adjustments/lead_time_adjustment.md)
-- [Stochastic Adjustment](../adjustments/stochastic_adjustment.md)
-- [Truck Complexity Adjustment](../adjustments/truck_complexity_adjustment.md)

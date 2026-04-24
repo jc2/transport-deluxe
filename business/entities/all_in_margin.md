@@ -7,12 +7,10 @@ This entity is a multi-layered aggregate starting from an initial baseline:
 
 1. **Initial Base Margin**: The starting profit value derived from cost and percent.
 2. **[Lead Time Adjustment](../adjustments/lead_time_adjustment.md)**: Urgency-based additive value.
-3. **[Stochastic Adjustment](../adjustments/stochastic_adjustment.md)**: Market-volatility additive value.
-4. **[Truck Complexity Adjustment](../adjustments/truck_complexity_adjustment.md)**: Distance/Complexity additive value.
 
 ## Formula
 ```text
-all_in_margin = Initial Base Margin + Lead Time Adjustment + Stochastic Adjustment + Truck Complexity Adjustment
+all_in_margin = Initial Base Margin + Lead Time Adjustment
 ```
 
 ## Role in Pricing
