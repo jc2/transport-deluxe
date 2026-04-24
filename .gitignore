@@ -1,9 +1,11 @@
-# PostgreSQL data directories (bind-mount contents, not code)
+# PostgreSQL data directories - only track .gitkeep markers, not data
 persistence/casdoor/postgres/data/
-persistence/fuel-cost-config-db/postgres/*
-persistence/fuel-cost-config-test-db/postgres/*
-!persistence/fuel-cost-config-db/postgres/.gitkeep
-!persistence/fuel-cost-config-test-db/postgres/.gitkeep
+persistence/driver-tariff-config-db/postgres/pgdata/
+persistence/fuel-cost-config-db/postgres/pgdata/
+
+# Test databases - completely excluded
+persistence/driver-tariff-config-test-db/
+persistence/fuel-cost-config-test-db/
 
 # Python
 __pycache__/
