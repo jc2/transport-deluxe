@@ -4,10 +4,48 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "fuel-cost-config",
+]
+
+[tool.uv.sources]
+fuel-cost-config = { path = "fuel_cost_config", editable = true }
 
 [dependency-groups]
 dev = [
     "mypy>=1.15.0",
     "pre-commit>=4.2.0",
 ]
+
+
+[tool.mypy]
+strict = true
+
+[[tool.mypy.overrides]]
+module = [
+    "fuel_cost_config.tests.*",
+    "tests.*"
+]
+disallow_untyped_defs = false
+disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+module = [
+    "fuel_cost_config.src.modules.fuel_cost_config.admin",
+    "fuel_cost_config.src.tools.admin_auth"
+]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = [
+    "alembic.*",
+    "pytest_asyncio.*",
+    "pytest.*",
+    "sqladmin.*",
+    "wtforms.*",
+    "jose.*"
+]
+ignore_missing_imports = true
+
+[tool.pyright]
+extraPaths = ["fuel_cost_config"]

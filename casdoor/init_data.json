@@ -32,6 +32,7 @@
       "enableSamlCompress": false,
       "clientId": "transport-deluxe-client",
       "clientSecret": "transport-deluxe-secret",
+      "grantTypes": ["authorization_code", "password", "client_credentials"],
       "redirectUris": ["http://localhost:8000/callback"],
       "tokenFormat": "JWT",
       "expireInHours": 24,

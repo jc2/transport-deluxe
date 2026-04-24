@@ -28,6 +28,14 @@
         "/^bash \\.specify/scripts/bash/check-prerequisites\\.sh --json --require-tasks --include-tasks 2>&1$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^bash \\.specify/scripts/bash/check-prerequisites\\.sh --json --paths-only$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^bash \\.specify/scripts/bash/check-prerequisites\\.sh --help 2>&1 \\| head -40$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }
