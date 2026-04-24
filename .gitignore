@@ -1,5 +1,9 @@
 # PostgreSQL data directories (bind-mount contents, not code)
 persistence/casdoor/postgres/data/
+persistence/fuel-cost-config-db/postgres/*
+persistence/fuel-cost-config-test-db/postgres/*
+!persistence/fuel-cost-config-db/postgres/.gitkeep
+!persistence/fuel-cost-config-test-db/postgres/.gitkeep
 
 # Python
 __pycache__/

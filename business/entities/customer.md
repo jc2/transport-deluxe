@@ -1,16 +1,15 @@
-# Customer & Subcustomer
+# Customer
 
-Our clients are organized into a two-level hierarchy to manage global operations and regional specifics.
+Our clients are represented as a single entity with a two-level hierarchy to manage global operations and regional specifics.
 
-## Hierarchy
-- **Customer**: The top-level global entity.
-- **Subcustomer**: A regional or specific branch.
+## Attributes
+- **Name**: The top-level global entity identifier (e.g., `Acme Corp`).
+- **Subname**: (Optional) A regional or specific branch identifier (e.g., `Texas_Branch`).
 
 ## Rules
-- A **Customer** can have multiple **Subcustomers**.
-- A **Subcustomer** belongs to exactly one **Customer**.
-- **References**: Every business operation must reference *both* the Customer and Subcustomer to ensure absolute clarity.
+- A **Customer** is uniquely identified by the combination of its **Name** and **Subname**.
+- Every business operation must reference the Customer using this structure to ensure absolute clarity.
 
 ## Commercial Context
-- **Subsidies**: Specific Subcustomers may have subsidized fuel costs.
-- **Discounts**: Some Customers have scheduled discounts based on the day of the week.
+- **Subsidies**: Specific Customer branches (where `subname` is present) may have subsidized fuel costs.
+- **Discounts**: The top-level Customer (where `subname` is empty or generic) may have scheduled discounts based on the day of the week.

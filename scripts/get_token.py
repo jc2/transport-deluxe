@@ -11,7 +11,7 @@ Prints the JWT access token to stdout. Exits 0 on success, 1 on error.
 
 import sys
 
-import httpx  # type: ignore[import-not-found]  # noqa: PGH003
+import httpx
 
 CASDOOR_URL = "http://localhost:8000"
 CLIENT_ID = "transport-deluxe-client"

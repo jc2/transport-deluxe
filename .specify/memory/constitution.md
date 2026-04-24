@@ -1,5 +1,21 @@
 <!--
 SYNC_IMPACT_REPORT
+Version change: 1.4.0 → 1.5.0
+Modified principles:
+  - IX. Data Persistence and Auditing: the acting user is now identified from the
+    JWT token `name` claim instead of the `x-user` HTTP header. The `x-user` header
+    pattern is removed from the constitution. Services that already have the JWT
+    decoded in the auth dependency MUST extract the user identity from the decoded
+    payload and pass it to audit fields directly — no separate header is required.
+Added principles: none
+Removed sections: none
+Templates updated:
+  - .specify/templates/plan-template.md ✅ updated Principle IX Constitution Check item
+Deferred TODOs: none
+-->
+
+<!--
+SYNC_IMPACT_REPORT
 Version change: 1.3.0 → 1.4.0
 Modified principles: none
 Added principles:
@@ -140,7 +156,7 @@ Every resource stored in the database MUST include:
 - Soft delete pattern.
 - Versioning (row versions).
 - Auditability: we MUST always record who created and who deleted the entity.
-- For now, the acting user is identified from the `x-user` HTTP header; this value MUST be propagated into the database audit fields.
+- The acting user MUST be identified from the JWT token claims (e.g., the `name` claim); this value MUST be extracted by the auth dependency and propagated into the database audit fields. No separate `x-user` HTTP header is required or expected.
 
 ### X. Async HTTP Communications
 
@@ -212,4 +228,4 @@ This constitution supersedes all other practices. Amendments require:
 All implementation plans MUST include a Constitution Check verifying compliance with
 principles I–XI before work begins.
 
-**Version**: 1.4.0 | **Ratified**: 2026-04-22 | **Last Amended**: 2026-04-23
+**Version**: 1.5.0 | **Ratified**: 2026-04-22 | **Last Amended**: 2026-04-23

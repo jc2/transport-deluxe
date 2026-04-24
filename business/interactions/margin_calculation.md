@@ -9,16 +9,10 @@ Margin is the business profit added to the [all_in_cost](cost_estimation.md).
 2. **Determine [Lead Time Adjustment](../adjustments/lead_time_adjustment.md)**:
     - **Configuration Search**: Lookup [Lead Time Configuration](../configurations/lead_time_configuration.md) based on days to shipment.
     - **Application**: Multiply **Initial Base Margin** by the retrieved factor.
-3. **Determine [Stochastic Adjustment](../adjustments/stochastic_adjustment.md)**:
-    - **Configuration Search**: Lookup [Stochastic Margin Configuration](../configurations/stochastic_margin_configuration.md).
-    - **Application**: Multiply **Initial Base Margin** by the retrieved factor.
-4. **Determine [Truck Complexity Adjustment](../adjustments/truck_complexity_adjustment.md)**:
-    - **Configuration Search**: Lookup [Truck Complexity Margin Configuration](../configurations/truck_complexity_margin_configuration.md) based on distance.
-    - **Application**: Multiply **Initial Base Margin** by the retrieved factor.
-5. **Determine all_in_margin**: Sum all components: `Initial Base Margin + Lead Time Adjustment + Stochastic Adjustment + Truck Complexity Adjustment`.
+3. **Determine all_in_margin**: Sum all components: `Initial Base Margin + Lead Time Adjustment`.
 
 ## Formula
-all_in_margin = Initial Base Margin + Lead Time Adjustment + Stochastic Adjustment + Truck Complexity Adjustment
+all_in_margin = Initial Base Margin + Lead Time Adjustment
 
 ## Example
 If a load has:
