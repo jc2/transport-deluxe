@@ -4,7 +4,7 @@ Margin is the business profit added to the [all_in_cost](cost_estimation.md).
 
 ## Step-by-Step Calculation
 1. **Determine Initial Base Margin**:
-    - **Configuration Search**: Lookup [Base Margin Configuration](../configurations/base_margin_configuration.md) to identify the correct percentage (0 to 1).
+    - **Configuration Search**: Lookup [Base Margin Configuration](../configurations/base_margin_configuration.md) using the specificity hierarchy (Customer > Route > Single Location).
     - **Application**: Convert percent to currency: `Initial Base Margin = (all_in_cost * %) / (1 - %)`.
 2. **Determine [Lead Time Adjustment](../adjustments/lead_time_adjustment.md)**:
     - **Configuration Search**: Lookup [Lead Time Configuration](../configurations/lead_time_configuration.md) based on days to shipment.
