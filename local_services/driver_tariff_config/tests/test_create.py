@@ -85,14 +85,14 @@ async def test_create_400_on_negative_factor(client, auth_token, clean_table) ->
 
 
 @pytest.mark.asyncio
-async def test_create_400_on_no_states(client, auth_token, clean_table) -> None:
+async def test_create_201_on_no_states(client, auth_token, clean_table) -> None:
     headers = {"Authorization": f"Bearer {auth_token}"}
     response = await client.post(
         "/driver-tariff-configs",
         json={"pickup_state": None, "drop_state": None, "tariff_factor": "1.00"},
         headers=headers,
     )
-    assert response.status_code == 422
+    assert response.status_code == 201
 
 
 @pytest.mark.asyncio

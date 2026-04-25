@@ -228,11 +228,13 @@ async def resolve_config(
         WHERE (pickup_state = :pickup_state AND drop_state = :drop_state)
            OR (pickup_state = :pickup_state AND drop_state IS NULL)
            OR (pickup_state IS NULL AND drop_state = :drop_state)
+           OR (pickup_state IS NULL AND drop_state IS NULL)
         ORDER BY
             CASE
                 WHEN pickup_state = :pickup_state AND drop_state = :drop_state THEN 1
                 WHEN pickup_state = :pickup_state AND drop_state IS NULL THEN 2
                 WHEN pickup_state IS NULL AND drop_state = :drop_state THEN 3
+                WHEN pickup_state IS NULL AND drop_state IS NULL THEN 4
             END,
             version DESC
         LIMIT 1

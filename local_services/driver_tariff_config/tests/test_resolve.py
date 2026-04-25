@@ -47,8 +47,17 @@ async def test_resolve_hierarchy(client, auth_token, clean_table) -> None:
     assert resp.status_code == 200
     assert str(resp.json()["tariff_factor"]) == "1.1000"
 
-    # Test 404 No Match (NY -> FL)
+    # Test 404 No Match - before global wildcard
+    # Actually wait. Let's create the global wildcard and see if it matches NY -> FL
+    resp_create = await client.post(
+        "/driver-tariff-configs",
+        json={"pickup_state": None, "drop_state": None, "tariff_factor": "1.01"},
+        headers=headers,
+    )
+    assert resp_create.status_code == 201
+
     resp = await client.post(
         "/driver-tariff-configs/resolve", json={"pickup_state": "NY", "drop_state": "FL"}, headers=headers
     )
-    assert resp.status_code == 404
+    assert resp.status_code == 200
+    assert str(resp.json()["tariff_factor"]) == "1.0100"

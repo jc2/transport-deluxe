@@ -81,22 +81,26 @@ async def create_config(
     request: CreateRequest,
     created_by: str,
 ) -> LeadTimeConfigResponse:
-    # Optional logic: verify no identical active configurations exist to avoid pure duplication
-    stmt = (
-        select(func.count())
-        .select_from(LeadTimeConfig)
-        .where(
-            LeadTimeConfig.min_days == request.min_days,
-            LeadTimeConfig.max_days == request.max_days,
-        )
-    )
-    count_result = await session.exec(stmt)
-    if count_result.one() > 0:
+    # Verify no overlapping active configurations exist
+    # A overlaps B iff (A_min <= B_max) AND (A_max >= B_min)
+    # Using COALESCE to handle NULL as infinity
+    stmt = text("""
+        SELECT COUNT(*)
+        FROM (
+            SELECT DISTINCT ON (uuid) *
+            FROM lead_time_config
+            ORDER BY uuid, version DESC
+        ) AS latest_configs
+        WHERE (:min_days <= COALESCE(max_days, 2147483647))
+          AND (COALESCE(:max_days, 2147483647) >= min_days)
+    """)
+    result = await session.exec(stmt.bindparams(min_days=request.min_days, max_days=request.max_days))  # type: ignore[call-overload]
+    if result.first()[0] > 0:
         raise HTTPException(
             status_code=409,
             detail={
                 "status": 409,
-                "messages": ["A configuration already exists for this min/max combination"],
+                "messages": ["An active configuration already exists that overlaps with this min/max range"],
             },
         )
 
@@ -187,7 +191,11 @@ async def resolve_config(
 
     stmt = text("""
         SELECT uuid, version, min_days, max_days, configuration_factor, created_by, created_at
-        FROM lead_time_config
+        FROM (
+            SELECT DISTINCT ON (uuid) *
+            FROM lead_time_config
+            ORDER BY uuid, version DESC
+        ) AS latest_configs
         WHERE min_days <= :days
           AND (max_days IS NULL OR max_days >= :days)
         ORDER BY version DESC

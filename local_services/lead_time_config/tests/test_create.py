@@ -41,4 +41,4 @@ async def test_create_config_duplicate(client: AsyncClient, clean_table, auth_to
 
     assert response2.status_code == 409
     data = response2.json()
-    assert "already exists for this min/max combination" in data["messages"][0]
+    assert "overlaps with this min/max range" in data["messages"][0]
