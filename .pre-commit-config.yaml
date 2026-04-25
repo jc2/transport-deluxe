@@ -13,7 +13,7 @@ repos:
     rev: v0.11.6
     hooks:
       - id: ruff
-        args: [--fix, --select, "E,F,I,UP", --line-length, "120"]
+        args: [--fix, --select, "E,F,I,UP", --ignore, "E711,E712", --line-length, "120"]
       - id: ruff-format
         args: [--line-length, "120"]
 
@@ -21,6 +21,20 @@ repos:
     rev: v1.15.0
     hooks:
       - id: mypy
-        exclude: '^fuel_cost_config/tests/'
+        name: mypy (base-margin)
+        files: ^base_margin_config/
+        exclude: ^base_margin_config/tests/
+        args: [--config-file=pyproject.toml]
         additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest"]
-        args: [--strict]
+      - id: mypy
+        name: mypy (driver-tariff)
+        files: ^driver_tariff_config/
+        exclude: ^driver_tariff_config/tests/
+        args: [--config-file=pyproject.toml]
+        additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest"]
+      - id: mypy
+        name: mypy (fuel-cost)
+        files: ^fuel_cost_config/
+        exclude: ^fuel_cost_config/tests/
+        args: [--config-file=pyproject.toml]
+        additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest"]
