@@ -1,8 +1,3 @@
-# PostgreSQL data directories - only track .gitkeep markers, not data
-persistence/casdoor/postgres/data/
-persistence/driver-tariff-config-db/postgres/pgdata/
-persistence/fuel-cost-config-db/postgres/pgdata/
-
 # Test databases - completely excluded
 persistence/driver-tariff-config-test-db/
 persistence/fuel-cost-config-test-db/
@@ -19,5 +14,4 @@ venv/
 *.tmp
 *.swp
 
-persistence/base-margin-config-db/
 persistence/base-margin-config-test-db/
