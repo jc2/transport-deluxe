@@ -40,3 +40,9 @@ repos:
         exclude: ^fuel_cost_config/tests/
         args: [--config-file=pyproject.toml]
         additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest"]
+      - id: mypy
+        name: mypy (lead-time)
+        files: ^lead_time_config/
+        exclude: ^lead_time_config/tests/
+        args: [--config-file=pyproject.toml]
+        additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest"]

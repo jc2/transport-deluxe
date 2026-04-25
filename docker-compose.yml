@@ -120,3 +120,33 @@ services:
       CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
       CASDOOR_ISSUER: http://localhost:8000
       SESSION_SECRET: your-session-secret-key-here
+
+  lead-time-config-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: lead_time_config
+      POSTGRES_USER: lead_time_config
+      POSTGRES_PASSWORD: lead_time_config
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./persistence/lead-time-config-db/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lead_time_config -d lead_time_config"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  lead-time-config:
+    build: ./lead_time_config
+    ports:
+      - "8004:8004"
+    depends_on:
+      lead-time-config-db:
+        condition: service_healthy
+      casdoor:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://lead_time_config:lead_time_config@lead-time-config-db/lead_time_config
+      CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
+      CASDOOR_ISSUER: http://localhost:8000
+      SESSION_SECRET: your-session-secret-key-here
