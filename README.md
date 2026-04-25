@@ -15,15 +15,15 @@
 ## Starting the stack
 
 ```bash
-docker compose up
+make up
 ```
 
 This starts Casdoor + its database, the `fuel-cost-config` service (at `http://localhost:8001`), the `driver-tariff-config` service (at `http://localhost:8002`), the `base-margin-config` service (at `http://localhost:8003`), and the `lead-time-config` service (at `http://localhost:8004`), along with their respective databases.
 
-To start only the identity services (useful during development):
+To start the stack in detached mode:
 
 ```bash
-docker compose up casdoor casdoor-db
+make up-d
 ```
 
 ---
@@ -33,23 +33,18 @@ docker compose up casdoor casdoor-db
 Integration tests run against separate dedicated test databases. They require Casdoor to be running in order to obtain real JWT tokens.
 
 ```bash
-# Start Casdoor (if not already running)
-docker compose up -d casdoor casdoor-db
-
-# Run fuel-cost-config service tests
-docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test up --abort-on-container-exit fuel-cost-config-tests
-
-# Run driver-tariff-config service tests
-docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test up --abort-on-container-exit driver-tariff-config-tests
-
-# Run base-margin-config service tests
-docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test up --abort-on-container-exit base-margin-config-tests
-
-# Run lead-time-config service tests
-docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test up --abort-on-container-exit lead-time-config-tests
+make test
 ```
 
 The test containers exit with code 0 if all tests pass.
+
+## Stopping the stack and cleaning up
+
+To stop and remove all docker containers (both normal and test):
+
+```bash
+make clean
+```
 
 ---
 
@@ -87,7 +82,7 @@ Requires `httpx` and `python-jose`: `pip install httpx python-jose`.
 
 The services include an embedded SQLAdmin interface to manage configurations.
 
-1. Ensure the application is running: `docker compose up`
+1. Ensure the application is running: `make up` (or `make up-d` for detached mode)
 2. Open your browser to:
    - **Fuel Cost Config**: [http://localhost:8001/admin](http://localhost:8001/admin)
    - **Driver Tariff Config**: [http://localhost:8002/admin](http://localhost:8002/admin)

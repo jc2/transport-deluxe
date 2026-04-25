@@ -12,10 +12,10 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-fuel-cost-config = { path = "fuel_cost_config", editable = true }
-driver-tariff-config = { path = "driver_tariff_config", editable = true }
-base-margin-config = { path = "base_margin_config", editable = true }
-lead-time-config = { path = "lead_time_config", editable = true }
+fuel-cost-config = { path = "local_services/fuel_cost_config", editable = true }
+driver-tariff-config = { path = "local_services/driver_tariff_config", editable = true }
+base-margin-config = { path = "local_services/base_margin_config", editable = true }
+lead-time-config = { path = "local_services/lead_time_config", editable = true }
 
 [dependency-groups]
 dev = [
@@ -63,4 +63,4 @@ module = [
 ignore_missing_imports = true
 
 [tool.pyright]
-extraPaths = ["fuel_cost_config", "driver_tariff_config", "base_margin_config", "lead_time_config"]
+extraPaths = ["local_services/fuel_cost_config", "local_services/driver_tariff_config", "local_services/base_margin_config", "local_services/lead_time_config"]
