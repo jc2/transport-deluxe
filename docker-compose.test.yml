@@ -91,3 +91,34 @@ services:
       CASDOOR_URL: http://casdoor:8000
     profiles:
       - test
+
+  lead-time-config-test-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: lead_time_config_tests
+      POSTGRES_USER: lead_time_config
+      POSTGRES_PASSWORD: lead_time_config
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./persistence/lead-time-config-test-db/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lead_time_config -d lead_time_config_tests"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  lead-time-config-tests:
+    build: ./lead_time_config
+    command: pytest tests/ -v
+    depends_on:
+      lead-time-config-test-db:
+        condition: service_healthy
+      casdoor:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://lead_time_config:lead_time_config@lead-time-config-test-db/lead_time_config_tests
+      CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
+      CASDOOR_ISSUER: http://localhost:8000
+      CASDOOR_URL: http://casdoor:8000
+    profiles:
+      - test
