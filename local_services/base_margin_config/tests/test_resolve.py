@@ -47,6 +47,14 @@ async def test_resolve_hierarchy(client, auth_token, clean_table):
     assert resp.status_code == 200
     assert resp.json()["margin_percent"] == 0.10
 
+    # Also test unauthenticated route access
+    resp_unauth = await client.post(
+        "/base-margin-configs/resolve",
+        json={"pickup": {"country": "US", "state": "NY"}},
+    )
+    assert resp_unauth.status_code == 200
+    assert resp_unauth.json()["margin_percent"] == 0.10
+
     # 2. Route should hit 0.15
     resp2 = await client.post(
         "/base-margin-configs/resolve",

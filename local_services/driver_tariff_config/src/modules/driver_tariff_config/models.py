@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Generic, TypeVar
 
-from pydantic import field_validator, model_validator
+from pydantic import field_validator
 from sqlmodel import Field, SQLModel
 
 
@@ -63,12 +63,6 @@ class CreateRequest(SQLModel):
         if v <= 0:
             raise ValueError("tariff_factor must be greater than 0")
         return v
-
-    @model_validator(mode="after")
-    def validate_states(self) -> "CreateRequest":
-        if self.pickup_state is None and self.drop_state is None:
-            raise ValueError("At least one location (pickup_state or drop_state) must be specified.")
-        return self
 
 
 class UpdateRequest(SQLModel):

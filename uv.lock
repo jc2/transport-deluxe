@@ -77,7 +77,7 @@ wheels = [
 [[package]]
 name = "base-margin-config"
 version = "0.1.0"
-source = { editable = "base_margin_config" }
+source = { editable = "local_services/base_margin_config" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
@@ -256,7 +256,7 @@ wheels = [
 [[package]]
 name = "driver-tariff-config"
 version = "0.1.0"
-source = { editable = "driver_tariff_config" }
+source = { editable = "local_services/driver_tariff_config" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
@@ -434,7 +434,7 @@ wheels = [
 [[package]]
 name = "fuel-cost-config"
 version = "0.1.0"
-source = { editable = "fuel_cost_config" }
+source = { editable = "local_services/fuel_cost_config" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
@@ -584,7 +584,7 @@ wheels = [
 [[package]]
 name = "lead-time-config"
 version = "0.1.0"
-source = { editable = "lead_time_config" }
+source = { editable = "local_services/lead_time_config" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
@@ -1181,10 +1181,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "base-margin-config", editable = "base_margin_config" },
-    { name = "driver-tariff-config", editable = "driver_tariff_config" },
-    { name = "fuel-cost-config", editable = "fuel_cost_config" },
-    { name = "lead-time-config", editable = "lead_time_config" },
+    { name = "base-margin-config", editable = "local_services/base_margin_config" },
+    { name = "driver-tariff-config", editable = "local_services/driver_tariff_config" },
+    { name = "fuel-cost-config", editable = "local_services/fuel_cost_config" },
+    { name = "lead-time-config", editable = "local_services/lead_time_config" },
 ]
 
 [package.metadata.requires-dev]

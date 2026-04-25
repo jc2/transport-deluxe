@@ -24,25 +24,25 @@ repos:
     hooks:
       - id: mypy
         name: mypy (base-margin)
-        files: ^base_margin_config/
-        exclude: ^base_margin_config/tests/
+        files: ^local_services/base_margin_config/
+        exclude: ^local_services/base_margin_config/tests/
         args: [--config-file=pyproject.toml]
         additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest"]
       - id: mypy
         name: mypy (driver-tariff)
-        files: ^driver_tariff_config/
-        exclude: ^driver_tariff_config/tests/
+        files: ^local_services/driver_tariff_config/
+        exclude: ^local_services/driver_tariff_config/tests/
         args: [--config-file=pyproject.toml]
         additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest"]
       - id: mypy
         name: mypy (fuel-cost)
-        files: ^fuel_cost_config/
-        exclude: ^fuel_cost_config/tests/
+        files: ^local_services/fuel_cost_config/
+        exclude: ^local_services/fuel_cost_config/tests/
         args: [--config-file=pyproject.toml]
         additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest"]
       - id: mypy
         name: mypy (lead-time)
-        files: ^lead_time_config/
-        exclude: ^lead_time_config/tests/
+        files: ^local_services/lead_time_config/
+        exclude: ^local_services/lead_time_config/tests/
         args: [--config-file=pyproject.toml]
         additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest"]

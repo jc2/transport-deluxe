@@ -58,7 +58,7 @@ async def delete_config(uuid: uuid_lib.UUID, session: AsyncSessionDep, jwt: Veri
 
 
 @router.post("/resolve", response_model=BaseMarginConfig)
-async def resolve_config(req: ResolveRequest, session: AsyncSessionDep, jwt: VerifiedJwt) -> BaseMarginConfig:
+async def resolve_config(req: ResolveRequest, session: AsyncSessionDep) -> BaseMarginConfig:
     config = await resolve_base_margin_config(session, req)
     if not config:
         raise HTTPException(status_code=404, detail="No matching configuration found.")

@@ -15,7 +15,7 @@ services:
       retries: 10
 
   fuel-cost-config-tests:
-    build: ./fuel_cost_config
+    build: ./local_services/fuel_cost_config
     command: pytest tests/ -v
     depends_on:
       fuel-cost-config-test-db:
@@ -46,7 +46,7 @@ services:
       retries: 10
 
   driver-tariff-config-tests:
-    build: ./driver_tariff_config
+    build: ./local_services/driver_tariff_config
     command: pytest tests/ -v
     depends_on:
       driver-tariff-config-test-db:
@@ -77,7 +77,7 @@ services:
       retries: 10
 
   base-margin-config-tests:
-    build: ./base_margin_config
+    build: ./local_services/base_margin_config
     command: pytest tests/ -v
     depends_on:
       base-margin-config-test-db:
@@ -108,7 +108,7 @@ services:
       retries: 10
 
   lead-time-config-tests:
-    build: ./lead_time_config
+    build: ./local_services/lead_time_config
     command: pytest tests/ -v
     depends_on:
       lead-time-config-test-db:

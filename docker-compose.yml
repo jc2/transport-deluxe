@@ -24,7 +24,7 @@ services:
       - driverName=postgres
       - dataSourceName=host=casdoor-db user=casdoor password=casdoor dbname=casdoor port=5432 sslmode=disable
     volumes:
-      - ./casdoor/init_data.json:/init_data.json
+      - ./external_services/casdoor/init_data.json:/init_data.json
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8000/.well-known/jwks || exit 1"]
       interval: 10s
@@ -47,7 +47,7 @@ services:
       retries: 10
 
   fuel-cost-config:
-    build: ./fuel_cost_config
+    build: ./local_services/fuel_cost_config
     ports:
       - "8001:8001"
     depends_on:
@@ -77,7 +77,7 @@ services:
       retries: 10
 
   driver-tariff-config:
-    build: ./driver_tariff_config
+    build: ./local_services/driver_tariff_config
     ports:
       - "8002:8001"
     depends_on:
@@ -107,7 +107,7 @@ services:
       retries: 10
 
   base-margin-config:
-    build: ./base_margin_config
+    build: ./local_services/base_margin_config
     ports:
       - "8003:8003"
     depends_on:
@@ -137,7 +137,7 @@ services:
       retries: 10
 
   lead-time-config:
-    build: ./lead_time_config
+    build: ./local_services/lead_time_config
     ports:
       - "8004:8004"
     depends_on:
