@@ -8,6 +8,7 @@
 | 8001 | fuel-cost-config | Fuel Cost Configuration Management |
 | 8002 | driver-tariff-config | Driver Tariff Configuration Management |
 | 8003 | base-margin-config | Base Margin Configuration Management |
+| 8004 | lead-time-config | Lead Time Configuration Management |
 
 ---
 
@@ -17,7 +18,7 @@
 docker compose up
 ```
 
-This starts Casdoor + its database, the `fuel-cost-config` service (at `http://localhost:8001`), the `driver-tariff-config` service (at `http://localhost:8002`), and the `base-margin-config` service (at `http://localhost:8003`), along with their respective databases.
+This starts Casdoor + its database, the `fuel-cost-config` service (at `http://localhost:8001`), the `driver-tariff-config` service (at `http://localhost:8002`), the `base-margin-config` service (at `http://localhost:8003`), and the `lead-time-config` service (at `http://localhost:8004`), along with their respective databases.
 
 To start only the identity services (useful during development):
 
@@ -43,6 +44,9 @@ docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test u
 
 # Run base-margin-config service tests
 docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test up --abort-on-container-exit base-margin-config-tests
+
+# Run lead-time-config service tests
+docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test up --abort-on-container-exit lead-time-config-tests
 ```
 
 The test containers exit with code 0 if all tests pass.
@@ -88,6 +92,7 @@ The services include an embedded SQLAdmin interface to manage configurations.
    - **Fuel Cost Config**: [http://localhost:8001/admin](http://localhost:8001/admin)
    - **Driver Tariff Config**: [http://localhost:8002/admin](http://localhost:8002/admin)
    - **Base Margin Config**: [http://localhost:8003/admin](http://localhost:8003/admin)
+   - **Lead Time Config**: [http://localhost:8004/admin](http://localhost:8004/admin)
 3. Authenticate using Casdoor credentials. You must use an account that has the required config role (`cost-configurator` or `margin-configurator`).
    - **Example Cost Username**: `test-cost-configurator`
    - **Example Margin Username**: `test-margin-configurator`
