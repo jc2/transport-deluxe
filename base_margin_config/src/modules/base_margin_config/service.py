@@ -1,5 +1,6 @@
 import uuid
-from typing import List, Optional
+from collections.abc import Sequence
+from typing import Optional
 
 from fastapi import HTTPException
 from sqlmodel import col, func, select
@@ -77,7 +78,7 @@ async def create_base_margin_config(
     return record
 
 
-async def list_base_margin_configs(session: AsyncSession) -> List[BaseMarginConfig]:
+async def list_base_margin_configs(session: AsyncSession) -> Sequence[BaseMarginConfig]:
     stmt = (
         select(BaseMarginConfig)
         .distinct(col(BaseMarginConfig.uuid))
