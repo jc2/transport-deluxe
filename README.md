@@ -10,6 +10,19 @@
 | 8003 | base-margin-config | Base Margin Configuration Management |
 | 8004 | lead-time-config | Lead Time Configuration Management |
 
+
+## External Services (Cloud APIs)
+This project calculates truck routes distances in kilometers based on ZIP codes using cloud APIs:
+1. **Nominatim OpenStreetMap API** for Geocoding (ZIP -> coordinates)
+2. **Stadia Maps (Valhalla) API** for Routing (Coordinates -> distances)
+
+Since these are cloud-based services, no local Docker containers or data downloads are required for routing.
+
+To test the services via CLI:
+* **Test Geocoding:** `uv run python scripts/test_nominatim.py 90210`
+* **Test Routing:** `uv run python scripts/test_valhalla.py --lat1 34.0901 --lon1 -118.4065 --lat2 40.7488 --lon2 -73.9857`
+* **Test Geocoding + Routing Combined:** `uv run python scripts/test_distance_service.py 90210 10001`
+
 ---
 
 ## Starting the stack
