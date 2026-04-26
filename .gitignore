@@ -16,3 +16,4 @@ venv/
 
 persistence/base-margin-config-test-db/
 persistence/lead-time-config-test-db/
+*.env
