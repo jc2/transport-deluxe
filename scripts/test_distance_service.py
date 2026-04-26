@@ -6,7 +6,7 @@ import httpx
 # Cloud endpoints
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 VALHALLA_URL = "https://api.stadiamaps.com/route/v1"
-STADIA_API_KEY = "367f4ddc-e815-4801-a157-fe591482a3b4"
+STADIA_API_KEY = ""
 
 
 def geocode_zipcode(zipcode):
