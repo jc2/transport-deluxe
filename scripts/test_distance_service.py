@@ -1,12 +1,16 @@
 import argparse
+import os
 import sys
 
 import httpx
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Cloud endpoints
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 VALHALLA_URL = "https://api.stadiamaps.com/route/v1"
-STADIA_API_KEY = ""
+STADIA_API_KEY = os.getenv("STADIA_API_KEY")
 
 
 def geocode_zipcode(zipcode):
@@ -39,14 +43,12 @@ def calculate_route_distance(pickup_coords, drop_coords):
     payload = {"locations": [pickup_coords, drop_coords], "costing": "truck", "units": "kilometers"}
 
     try:
-        # Note: Depending on valhalla version we must pass the param correctly.
         response = httpx.post(
             VALHALLA_URL, params=params, json=payload, headers={"Content-Type": "application/json"}, timeout=10.0
         )
         response.raise_for_status()
         data = response.json()
 
-        # Typically trips summary has distance length
         if "trip" in data and "summary" in data["trip"]:
             distance_km = data["trip"]["summary"]["length"]
             time_seconds = data["trip"]["summary"]["time"]
@@ -71,7 +73,6 @@ def run_example():
 
     args = parser.parse_args()
 
-    # Step 1: Geocode
     pickup_coords = geocode_zipcode(args.pickup_zip)
     if not pickup_coords:
         sys.exit(1)
@@ -80,7 +81,6 @@ def run_example():
     if not drop_coords_res:
         sys.exit(1)
 
-    # Step 2: Routing
     dist = calculate_route_distance(pickup_coords, drop_coords_res)
     if dist is None:
         sys.exit(1)
