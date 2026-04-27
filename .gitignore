@@ -17,4 +17,5 @@ venv/
 persistence/base-margin-config-test-db/
 persistence/lead-time-config-test-db/
 persistence/costing-engine-test-db/
+persistence/margin-engine-test-db/
 *.env
