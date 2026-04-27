@@ -16,7 +16,6 @@ test:
 	docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test run --rm base-margin-config-tests
 	docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test run --rm lead-time-config-tests
 	docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test run --rm costing-engine-tests
-
-# Remove all docker containers (both normal and test) along with networks
+	docker compose -f docKer-compose.yml -f docker-compose.test.yml --profile test run --rm margin-engine-tests
 clean:
 	docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test down
