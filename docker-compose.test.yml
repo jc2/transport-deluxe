@@ -122,3 +122,29 @@ services:
       CASDOOR_URL: http://casdoor:8000
     profiles:
       - test
+
+  costing-engine-test-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: costing_engine_tests
+      POSTGRES_USER: costing_engine
+      POSTGRES_PASSWORD: costing_engine
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./persistence/costing-engine-test-db/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U costing_engine -d costing_engine_tests"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  costing-engine-tests:
+    build: ./local_services/costing_engine
+    command: pytest tests/ -v
+    depends_on:
+      costing-engine-test-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://costing_engine:costing_engine@costing-engine-test-db/costing_engine_tests
+    profiles:
+      - test

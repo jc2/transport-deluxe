@@ -1,17 +1,44 @@
 import uuid as uuid_lib
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Generic, TypeVar
+from typing import Generic, Optional, TypeVar
 
 from pydantic import field_validator, model_validator
 from sqlmodel import Field, SQLModel
 
 
 class TruckType(str, Enum):
-    flatbed = "flatbed"
-    reefer = "reefer"
-    dryvan = "dryvan"
+    FLATBED = "Flatbed"
+    REEFER = "Reefer"
+    DRYVAN = "Dryvan"
+
+
+class Customer(SQLModel):
+    name: str = Field(max_length=255)
+    subname: Optional[str] = Field(default=None, max_length=255)
+
+
+class Stop(SQLModel):
+    country: str = Field(max_length=255)
+    state: str = Field(max_length=255)
+    city: str = Field(max_length=255)
+    postal_code: str = Field(max_length=255)
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
+
+class Route(SQLModel):
+    pickup: Stop
+    drop: Stop
+
+
+class Load(SQLModel):
+    route: Route
+    customer: Customer
+    truck_type: TruckType
+    ship_date: date
+    distance_km: Optional[float] = None
 
 
 class FuelCostConfig(SQLModel, table=True):
@@ -27,15 +54,10 @@ class FuelCostConfig(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 
-class CustomerField(SQLModel):
-    name: str
-    subname: str | None = None
-
-
 class FuelCostConfigResponse(SQLModel):
     uuid: uuid_lib.UUID
     version: int
-    customer: CustomerField | None
+    customer: Customer | None
     truck_type: TruckType
     fuel_cost_per_km: Decimal
     created_by: str
@@ -45,7 +67,7 @@ class FuelCostConfigResponse(SQLModel):
     def from_orm_row(cls, row: FuelCostConfig) -> "FuelCostConfigResponse":
         customer = None
         if row.customer_name is not None:
-            customer = CustomerField(name=row.customer_name, subname=row.customer_subname)
+            customer = Customer(name=row.customer_name, subname=row.customer_subname)
         return cls(
             uuid=row.uuid,
             version=row.version,
@@ -69,7 +91,7 @@ class PaginatedResponse(SQLModel, Generic[T]):
 
 
 class CreateRequest(SQLModel):
-    customer: CustomerField | None = None
+    customer: Customer | None = None
     truck_type: TruckType
     fuel_cost_per_km: Decimal
 
@@ -99,5 +121,11 @@ class UpdateRequest(SQLModel):
 
 
 class ResolveRequest(SQLModel):
-    customer: CustomerField | None = None
+    customer: Customer | None = None
     truck_type: TruckType
+
+
+FuelCostConfig.model_rebuild()
+CreateRequest.model_rebuild()
+FuelCostConfigResponse.model_rebuild()
+ResolveRequest.model_rebuild()

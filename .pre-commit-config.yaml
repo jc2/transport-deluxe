@@ -46,3 +46,9 @@ repos:
         exclude: ^local_services/lead_time_config/tests/
         args: [--config-file=pyproject.toml]
         additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest"]
+      - id: mypy
+        name: mypy (costing-engine)
+        files: ^local_services/costing_engine/
+        exclude: ^local_services/costing_engine/tests/
+        args: [--config-file=pyproject.toml, --explicit-package-bases]
+        additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest", "sf-hamilton", "pandas", "numpy", "python-dotenv", "pandas-stubs"]

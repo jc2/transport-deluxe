@@ -9,6 +9,7 @@ dependencies = [
     "driver-tariff-config",
     "base-margin-config",
     "lead-time-config",
+    "costing-engine",
 ]
 
 [tool.uv.sources]
@@ -16,6 +17,7 @@ fuel-cost-config = { path = "local_services/fuel_cost_config", editable = true }
 driver-tariff-config = { path = "local_services/driver_tariff_config", editable = true }
 base-margin-config = { path = "local_services/base_margin_config", editable = true }
 lead-time-config = { path = "local_services/lead_time_config", editable = true }
+costing-engine = { path = "local_services/costing_engine", editable = true }
 
 [dependency-groups]
 dev = [
@@ -33,6 +35,7 @@ module = [
     "driver_tariff_config.tests.*",
     "base_margin_config.tests.*",
     "lead_time_config.tests.*",
+    "costing_engine.tests.*",
     "tests.*"
 ]
 disallow_untyped_defs = false
@@ -44,6 +47,7 @@ module = [
     "driver_tariff_config.src.modules.driver_tariff_config.admin",
     "base_margin_config.src.modules.base_margin_config.admin",
     "lead_time_config.src.modules.lead_time_config.admin",
+    "costing_engine.src.modules.costing.admin",
     "fuel_cost_config.src.tools.admin_auth",
     "driver_tariff_config.src.tools.admin_auth",
     "base_margin_config.src.tools.admin_auth",
@@ -63,4 +67,10 @@ module = [
 ignore_missing_imports = true
 
 [tool.pyright]
-extraPaths = ["local_services/fuel_cost_config", "local_services/driver_tariff_config", "local_services/base_margin_config", "local_services/lead_time_config"]
+extraPaths = [
+    "local_services/fuel_cost_config",
+    "local_services/driver_tariff_config",
+    "local_services/base_margin_config",
+    "local_services/lead_time_config",
+    "local_services/costing_engine"
+]

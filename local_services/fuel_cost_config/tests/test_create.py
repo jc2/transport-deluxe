@@ -6,14 +6,14 @@ async def test_create_system_level(client, auth_token, clean_table) -> None:
     headers = {"Authorization": f"Bearer {auth_token}"}
     response = await client.post(
         "/fuel-cost-configs",
-        json={"customer": None, "truck_type": "dryvan", "fuel_cost_per_km": "0.50"},
+        json={"customer": None, "truck_type": "Dryvan", "fuel_cost_per_km": "0.50"},
         headers=headers,
     )
     assert response.status_code == 201
     data = response.json()
     assert data["version"] == 1
     assert data["customer"] is None
-    assert data["truck_type"] == "dryvan"
+    assert data["truck_type"] == "Dryvan"
     assert str(data["fuel_cost_per_km"]) == "0.5000"
 
 
@@ -24,7 +24,7 @@ async def test_create_customer_level(client, auth_token, clean_table) -> None:
         "/fuel-cost-configs",
         json={
             "customer": {"name": "Acme", "subname": None},
-            "truck_type": "reefer",
+            "truck_type": "Reefer",
             "fuel_cost_per_km": "0.60",
         },
         headers=headers,
@@ -42,7 +42,7 @@ async def test_create_subcustomer_level(client, auth_token, clean_table) -> None
         "/fuel-cost-configs",
         json={
             "customer": {"name": "Acme", "subname": "East"},
-            "truck_type": "flatbed",
+            "truck_type": "Flatbed",
             "fuel_cost_per_km": "0.45",
         },
         headers=headers,
@@ -58,13 +58,13 @@ async def test_create_409_on_duplicate_active(client, auth_token, clean_table) -
     headers = {"Authorization": f"Bearer {auth_token}"}
     await client.post(
         "/fuel-cost-configs",
-        json={"customer": None, "truck_type": "dryvan", "fuel_cost_per_km": "0.50"},
+        json={"customer": None, "truck_type": "Dryvan", "fuel_cost_per_km": "0.50"},
         headers=headers,
     )
 
     response = await client.post(
         "/fuel-cost-configs",
-        json={"customer": None, "truck_type": "dryvan", "fuel_cost_per_km": "0.55"},
+        json={"customer": None, "truck_type": "Dryvan", "fuel_cost_per_km": "0.55"},
         headers=headers,
     )
     assert response.status_code == 409
@@ -75,7 +75,7 @@ async def test_create_400_on_zero_fuel_cost(client, auth_token, clean_table) -> 
     headers = {"Authorization": f"Bearer {auth_token}"}
     response = await client.post(
         "/fuel-cost-configs",
-        json={"customer": None, "truck_type": "reefer", "fuel_cost_per_km": "0"},
+        json={"customer": None, "truck_type": "Reefer", "fuel_cost_per_km": "0"},
         headers=headers,
     )
     assert response.status_code == 422
@@ -86,7 +86,7 @@ async def test_create_400_on_negative_fuel_cost(client, auth_token, clean_table)
     headers = {"Authorization": f"Bearer {auth_token}"}
     response = await client.post(
         "/fuel-cost-configs",
-        json={"customer": None, "truck_type": "reefer", "fuel_cost_per_km": "-0.10"},
+        json={"customer": None, "truck_type": "Reefer", "fuel_cost_per_km": "-0.10"},
         headers=headers,
     )
     assert response.status_code == 422
@@ -97,7 +97,7 @@ async def test_create_400_on_invalid_truck_type(client, auth_token, clean_table)
     headers = {"Authorization": f"Bearer {auth_token}"}
     response = await client.post(
         "/fuel-cost-configs",
-        json={"customer": None, "truck_type": "helicopter", "fuel_cost_per_km": "0.50"},
+        json={"customer": None, "truck_type": "Helicopter", "fuel_cost_per_km": "0.50"},
         headers=headers,
     )
     assert response.status_code == 422
@@ -108,7 +108,7 @@ async def test_create_created_by_from_jwt(client, auth_token, clean_table) -> No
     headers = {"Authorization": f"Bearer {auth_token}"}
     response = await client.post(
         "/fuel-cost-configs",
-        json={"customer": None, "truck_type": "flatbed", "fuel_cost_per_km": "0.40"},
+        json={"customer": None, "truck_type": "Flatbed", "fuel_cost_per_km": "0.40"},
         headers=headers,
     )
     assert response.status_code == 201
@@ -120,7 +120,7 @@ async def test_create_created_by_from_jwt(client, auth_token, clean_table) -> No
 async def test_create_401_without_token(client, clean_table) -> None:
     response = await client.post(
         "/fuel-cost-configs",
-        json={"customer": None, "truck_type": "dryvan", "fuel_cost_per_km": "0.50"},
+        json={"customer": None, "truck_type": "Dryvan", "fuel_cost_per_km": "0.50"},
     )
     assert response.status_code == 401
 
