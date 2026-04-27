@@ -10,7 +10,12 @@ up-d:
 
 # Build and run all test docker containers without -d
 test:
-	docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test up --build --abort-on-container-exit
+	docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test build
+	docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test run --rm fuel-cost-config-tests
+	docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test run --rm driver-tariff-config-tests
+	docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test run --rm base-margin-config-tests
+	docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test run --rm lead-time-config-tests
+	docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test run --rm costing-engine-tests
 
 # Remove all docker containers (both normal and test) along with networks
 clean:

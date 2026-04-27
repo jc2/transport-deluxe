@@ -1,21 +1,43 @@
 import uuid as uuid_lib
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
+from enum import Enum
 from typing import Optional
 
 from pydantic import field_validator, model_validator
 from sqlmodel import Field, SQLModel
 
 
-class LocationField(SQLModel):
-    country: Optional[str] = None
-    state: Optional[str] = None
-    city: Optional[str] = None
-    postal_code: Optional[str] = None
+class TruckType(str, Enum):
+    FLATBED = "Flatbed"
+    REEFER = "Reefer"
+    DRYVAN = "Dryvan"
 
 
-class CustomerField(SQLModel):
-    name: Optional[str] = None
-    subname: Optional[str] = None
+class Customer(SQLModel):
+    name: str = Field(max_length=255)
+    subname: Optional[str] = Field(default=None, max_length=255)
+
+
+class Stop(SQLModel):
+    country: str = Field(default="", max_length=255)
+    state: str = Field(default="", max_length=255)
+    city: str = Field(default="", max_length=255)
+    postal_code: str = Field(default="", max_length=255)
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
+
+class Route(SQLModel):
+    pickup: Stop
+    drop: Stop
+
+
+class Load(SQLModel):
+    route: Route
+    customer: Customer
+    truck_type: TruckType
+    ship_date: date
+    distance_km: Optional[float] = None
 
 
 class BaseMarginConfig(SQLModel, table=True):
@@ -46,9 +68,9 @@ class BaseMarginConfig(SQLModel, table=True):
 class BaseMarginConfigResponse(SQLModel):
     uuid: uuid_lib.UUID
     version: int
-    customer: CustomerField | None
-    pickup: LocationField | None
-    drop: LocationField | None
+    customer: Customer | None
+    pickup: Stop | None
+    drop: Stop | None
     margin_percent: float
     created_by: str
     created_at: datetime
@@ -57,21 +79,24 @@ class BaseMarginConfigResponse(SQLModel):
     def from_orm_row(cls, row: BaseMarginConfig) -> "BaseMarginConfigResponse":
         customer = None
         if row.customer_name is not None or row.customer_subname is not None:
-            customer = CustomerField(name=row.customer_name, subname=row.customer_subname)
+            customer = Customer(name=row.customer_name or "", subname=row.customer_subname)
 
         pickup = None
         if row.pickup_country or row.pickup_state or row.pickup_city or row.pickup_postal_code:
-            pickup = LocationField(
-                country=row.pickup_country,
-                state=row.pickup_state,
-                city=row.pickup_city,
-                postal_code=row.pickup_postal_code,
+            pickup = Stop(
+                country=row.pickup_country or "",
+                state=row.pickup_state or "",
+                city=row.pickup_city or "",
+                postal_code=row.pickup_postal_code or "",
             )
 
         drop = None
         if row.drop_country or row.drop_state or row.drop_city or row.drop_postal_code:
-            drop = LocationField(
-                country=row.drop_country, state=row.drop_state, city=row.drop_city, postal_code=row.drop_postal_code
+            drop = Stop(
+                country=row.drop_country or "",
+                state=row.drop_state or "",
+                city=row.drop_city or "",
+                postal_code=row.drop_postal_code or "",
             )
 
         return cls(
@@ -87,9 +112,9 @@ class BaseMarginConfigResponse(SQLModel):
 
 
 class CreateRequest(SQLModel):
-    customer: CustomerField | None = None
-    pickup: LocationField | None = None
-    drop: LocationField | None = None
+    customer: Customer | None = None
+    pickup: Stop | None = None
+    drop: Stop | None = None
     margin_percent: float
 
     @field_validator("margin_percent")
@@ -133,6 +158,12 @@ class UpdateRequest(SQLModel):
 
 
 class ResolveRequest(SQLModel):
-    customer: CustomerField | None = None
-    pickup: LocationField | None = None
-    drop: LocationField | None = None
+    customer: Customer | None = None
+    pickup: Stop | None = None
+    drop: Stop | None = None
+
+
+BaseMarginConfig.model_rebuild()
+CreateRequest.model_rebuild()
+BaseMarginConfigResponse.model_rebuild()
+ResolveRequest.model_rebuild()

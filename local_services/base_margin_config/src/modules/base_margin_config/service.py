@@ -9,8 +9,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from .models import (
     BaseMarginConfig,
     CreateRequest,
-    LocationField,
     ResolveRequest,
+    Stop,
     UpdateRequest,
 )
 
@@ -21,15 +21,15 @@ async def create_base_margin_config(
     c_name = req.customer.name if req.customer else None
     c_subname = req.customer.subname if req.customer else None
 
-    p_country = req.pickup.country if req.pickup else None
-    p_state = req.pickup.state if req.pickup else None
-    p_city = req.pickup.city if req.pickup else None
-    p_postal_code = req.pickup.postal_code if req.pickup else None
+    p_country = req.pickup.country if req.pickup and req.pickup.country else None
+    p_state = req.pickup.state if req.pickup and req.pickup.state else None
+    p_city = req.pickup.city if req.pickup and req.pickup.city else None
+    p_postal_code = req.pickup.postal_code if req.pickup and req.pickup.postal_code else None
 
-    d_country = req.drop.country if req.drop else None
-    d_state = req.drop.state if req.drop else None
-    d_city = req.drop.city if req.drop else None
-    d_postal_code = req.drop.postal_code if req.drop else None
+    d_country = req.drop.country if req.drop and req.drop.country else None
+    d_state = req.drop.state if req.drop and req.drop.state else None
+    d_city = req.drop.city if req.drop and req.drop.city else None
+    d_postal_code = req.drop.postal_code if req.drop and req.drop.postal_code else None
 
     stmt = (
         select(func.count())
@@ -150,8 +150,8 @@ async def resolve_base_margin_config(session: AsyncSession, req: ResolveRequest)
 
     c_name = req.customer.name if req.customer else None
     c_subname = req.customer.subname if req.customer else None
-    req_p = req.pickup or LocationField()
-    req_d = req.drop or LocationField()
+    req_p = req.pickup if req.pickup else Stop()
+    req_d = req.drop if req.drop else Stop()
 
     valid_matches = []
 
@@ -159,34 +159,47 @@ async def resolve_base_margin_config(session: AsyncSession, req: ResolveRequest)
     for c in all_configs:
         match = True
 
-        # Identity match (if config has value, request MUST match it exactly. if config is None, it fits anything)
+        # Identity match
         if c.customer_name is not None and c.customer_name != c_name:
             match = False
-        if c.customer_subname is not None and c.customer_subname != c_subname:
+        if c.customer_subname is not None and (c_subname is None or c.customer_subname != c_subname):
             match = False
 
         # Pickup match
-        if c.pickup_country is not None and c.pickup_country != req_p.country:
-            match = False
-        if c.pickup_state is not None and c.pickup_state != req_p.state:
-            match = False
-        if c.pickup_city is not None and c.pickup_city != req_p.city:
-            match = False
-        if c.pickup_postal_code is not None and c.pickup_postal_code != req_p.postal_code:
-            match = False
+        if c.pickup_country is not None and c.pickup_country != (req_p.country or ""):
+            if c.pickup_country != "":  # Allow match if DB has "" and request has ""
+                match = False
+        if c.pickup_state is not None and c.pickup_state != (req_p.state or ""):
+            if c.pickup_state != "":
+                match = False
+        if c.pickup_city is not None and c.pickup_city != (req_p.city or ""):
+            if c.pickup_city != "":
+                match = False
+        if c.pickup_postal_code is not None and c.pickup_postal_code != (req_p.postal_code or ""):
+            if c.pickup_postal_code != "":
+                match = False
 
         # Drop match
-        if c.drop_country is not None and c.drop_country != req_d.country:
-            match = False
-        if c.drop_state is not None and c.drop_state != req_d.state:
-            match = False
-        if c.drop_city is not None and c.drop_city != req_d.city:
-            match = False
-        if c.drop_postal_code is not None and c.drop_postal_code != req_d.postal_code:
-            match = False
+        if c.drop_country is not None and c.drop_country != (req_d.country or ""):
+            if c.drop_country != "":
+                match = False
+        if c.drop_state is not None and c.drop_state != (req_d.state or ""):
+            if c.drop_state != "":
+                match = False
+        if c.drop_city is not None and c.drop_city != (req_d.city or ""):
+            if c.drop_city != "":
+                match = False
+        if c.drop_postal_code is not None and c.drop_postal_code != (req_d.postal_code or ""):
+            if c.drop_postal_code != "":
+                match = False
 
         if match:
             valid_matches.append(c)
+
+    if not valid_matches:
+        # Fallback for broad matches if No-Pickup/No-Drop configs exist (None in DB)
+        # But wait, we just did that. Let's remove the prints to clean up.
+        return None
 
     if not valid_matches:
         return None
