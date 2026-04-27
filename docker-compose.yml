@@ -181,3 +181,35 @@ services:
       DATABASE_URL: postgresql+asyncpg://costing_engine:costing_engine@costing-engine-db/costing_engine
       SESSION_SECRET: your-session-secret-key-here
       STADIA_API_KEY: ${STADIA_API_KEY}
+
+  margin-engine-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: margin_engine
+      POSTGRES_USER: margin_engine
+      POSTGRES_PASSWORD: margin_engine
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./persistence/margin-engine-db/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U margin_engine -d margin_engine"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  margin-engine:
+    build: ./local_services/margin_engine
+    ports:
+      - "8006:8001"
+    depends_on:
+      margin-engine-db:
+        condition: service_healthy
+      base-margin-config:
+        condition: service_started
+      lead-time-config:
+        condition: service_started
+      costing-engine:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+asyncpg://margin_engine:margin_engine@margin-engine-db/margin_engine
+      SESSION_SECRET: your-session-secret-key-here
