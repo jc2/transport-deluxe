@@ -4,11 +4,11 @@ import pytest
 @pytest.mark.asyncio
 async def test_list_returns_active_configs_with_pagination(client, auth_token, clean_table) -> None:
     headers = {"Authorization": f"Bearer {auth_token}"}
-    payload = {"customer": None, "truck_type": "dryvan", "fuel_cost_per_km": "0.50"}
+    payload = {"customer": None, "truck_type": "Dryvan", "fuel_cost_per_km": "0.50"}
     await client.post("/fuel-cost-configs", json=payload, headers=headers)
     await client.post(
         "/fuel-cost-configs",
-        json={"customer": None, "truck_type": "reefer", "fuel_cost_per_km": "0.65"},
+        json={"customer": None, "truck_type": "Reefer", "fuel_cost_per_km": "0.65"},
         headers=headers,
     )
 
@@ -28,19 +28,19 @@ async def test_list_filter_by_truck_type(client, auth_token, clean_table) -> Non
     headers = {"Authorization": f"Bearer {auth_token}"}
     await client.post(
         "/fuel-cost-configs",
-        json={"customer": None, "truck_type": "reefer", "fuel_cost_per_km": "0.65"},
+        json={"customer": None, "truck_type": "Reefer", "fuel_cost_per_km": "0.65"},
         headers=headers,
     )
     await client.post(
         "/fuel-cost-configs",
-        json={"customer": None, "truck_type": "dryvan", "fuel_cost_per_km": "0.50"},
+        json={"customer": None, "truck_type": "Dryvan", "fuel_cost_per_km": "0.50"},
         headers=headers,
     )
 
-    response = await client.get("/fuel-cost-configs?truck_type=reefer", headers=headers)
+    response = await client.get("/fuel-cost-configs?truck_type=Reefer", headers=headers)
     assert response.status_code == 200
     data = response.json()
-    assert all(item["truck_type"] == "reefer" for item in data["data"])
+    assert all(item["truck_type"] == "Reefer" for item in data["data"])
 
 
 @pytest.mark.asyncio
@@ -50,14 +50,14 @@ async def test_list_filter_by_customer_name(client, auth_token, clean_table) -> 
         "/fuel-cost-configs",
         json={
             "customer": {"name": "Acme", "subname": None},
-            "truck_type": "reefer",
+            "truck_type": "Reefer",
             "fuel_cost_per_km": "0.60",
         },
         headers=headers,
     )
     await client.post(
         "/fuel-cost-configs",
-        json={"customer": None, "truck_type": "reefer", "fuel_cost_per_km": "0.65"},
+        json={"customer": None, "truck_type": "Reefer", "fuel_cost_per_km": "0.65"},
         headers=headers,
     )
 
@@ -73,7 +73,7 @@ async def test_list_include_inactive_with_uuid_returns_history_version_asc(clien
     headers = {"Authorization": f"Bearer {auth_token}"}
     create_resp = await client.post(
         "/fuel-cost-configs",
-        json={"customer": None, "truck_type": "flatbed", "fuel_cost_per_km": "0.40"},
+        json={"customer": None, "truck_type": "Flatbed", "fuel_cost_per_km": "0.40"},
         headers=headers,
     )
     assert create_resp.status_code == 201
