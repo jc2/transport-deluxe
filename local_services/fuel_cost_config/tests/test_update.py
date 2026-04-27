@@ -6,7 +6,7 @@ async def test_update_creates_new_version(client, auth_token, clean_table) -> No
     headers = {"Authorization": f"Bearer {auth_token}"}
     create_resp = await client.post(
         "/fuel-cost-configs",
-        json={"customer": None, "truck_type": "reefer", "fuel_cost_per_km": "0.65"},
+        json={"customer": None, "truck_type": "Reefer", "fuel_cost_per_km": "0.65"},
         headers=headers,
     )
     config_uuid = create_resp.json()["uuid"]
@@ -48,7 +48,7 @@ async def test_update_created_by_from_jwt(client, auth_token, clean_table) -> No
     headers = {"Authorization": f"Bearer {auth_token}"}
     create_resp = await client.post(
         "/fuel-cost-configs",
-        json={"customer": None, "truck_type": "dryvan", "fuel_cost_per_km": "0.50"},
+        json={"customer": None, "truck_type": "Dryvan", "fuel_cost_per_km": "0.50"},
         headers=headers,
     )
     config_uuid = create_resp.json()["uuid"]

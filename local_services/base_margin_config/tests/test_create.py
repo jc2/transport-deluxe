@@ -6,7 +6,11 @@ async def test_create_success(client, auth_token, clean_table):
     headers = {"Authorization": f"Bearer {auth_token}"}
     response = await client.post(
         "/base-margin-configs",
-        json={"customer": {"name": "Acme", "subname": None}, "pickup": {"country": "US"}, "margin_percent": 0.15},
+        json={
+            "customer": {"name": "Acme", "subname": None},
+            "pickup": {"country": "US", "state": "CA", "city": "LA", "postal_code": "90210"},
+            "margin_percent": 0.15,
+        },
         headers=headers,
     )
     assert response.status_code == 201
@@ -20,6 +24,7 @@ async def test_create_success(client, auth_token, clean_table):
 @pytest.mark.asyncio
 async def test_create_all_null_fails(client, auth_token, clean_table):
     headers = {"Authorization": f"Bearer {auth_token}"}
+    # No customer, no pickup, no drop. margin_percent is present but that's not enough.
     response = await client.post(
         "/base-margin-configs",
         json={"margin_percent": 0.2},
@@ -31,7 +36,11 @@ async def test_create_all_null_fails(client, auth_token, clean_table):
 @pytest.mark.asyncio
 async def test_create_duplicate_fails(client, auth_token, clean_table):
     headers = {"Authorization": f"Bearer {auth_token}"}
-    payload = {"customer": {"name": "Acme"}, "margin_percent": 0.1}
+    payload = {
+        "customer": {"name": "Acme"},
+        "pickup": {"country": "US", "state": "CA", "city": "LA", "postal_code": "90210"},
+        "margin_percent": 0.1,
+    }
     r1 = await client.post("/base-margin-configs", json=payload, headers=headers)
     assert r1.status_code == 201
 
@@ -44,7 +53,11 @@ async def test_create_invalid_margin(client, auth_token, clean_table):
     headers = {"Authorization": f"Bearer {auth_token}"}
     response = await client.post(
         "/base-margin-configs",
-        json={"customer": {"name": "Acme"}, "margin_percent": 1.5},
+        json={
+            "customer": {"name": "Acme"},
+            "pickup": {"country": "US", "state": "CA", "city": "LA", "postal_code": "90210"},
+            "margin_percent": 1.5,
+        },
         headers=headers,
     )
     assert response.status_code == 422
@@ -55,7 +68,11 @@ async def test_create_created_by_from_jwt(client, auth_token, clean_table) -> No
     headers = {"Authorization": f"Bearer {auth_token}"}
     response = await client.post(
         "/base-margin-configs",
-        json={"customer": {"name": "Acme"}, "margin_percent": 0.15},
+        json={
+            "customer": {"name": "Acme"},
+            "pickup": {"country": "US", "state": "CA", "city": "LA", "postal_code": "90210"},
+            "margin_percent": 0.15,
+        },
         headers=headers,
     )
     assert response.status_code == 201

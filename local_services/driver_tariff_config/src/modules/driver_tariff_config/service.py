@@ -214,8 +214,8 @@ async def resolve_config(
     session: AsyncSession,
     request: ResolveRequest,
 ) -> DriverTariffConfigResponse:
-    pickup_state = request.pickup_state
-    drop_state = request.drop_state
+    pickup_state = request.load.route.pickup.state
+    drop_state = request.load.route.drop.state
 
     # specific match (both states) = priority 1
     # origin default (pickup, no drop) = priority 2

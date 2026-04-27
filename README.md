@@ -9,6 +9,7 @@
 | 8002 | driver-tariff-config | Driver Tariff Configuration Management |
 | 8003 | base-margin-config | Base Margin Configuration Management |
 | 8004 | lead-time-config | Lead Time Configuration Management |
+| 8005 | costing-engine | Transport Costing Workflow Engine |
 
 
 ## External Services (Cloud APIs)
@@ -101,6 +102,7 @@ The services include an embedded SQLAdmin interface to manage configurations.
    - **Driver Tariff Config**: [http://localhost:8002/admin](http://localhost:8002/admin)
    - **Base Margin Config**: [http://localhost:8003/admin](http://localhost:8003/admin)
    - **Lead Time Config**: [http://localhost:8004/admin](http://localhost:8004/admin)
+   - **Costing Engine**: [http://localhost:8005/admin](http://localhost:8005/admin)
 3. Authenticate using Casdoor credentials. You must use an account that has the required config role (`cost-configurator` or `margin-configurator`).
    - **Example Cost Username**: `test-cost-configurator`
    - **Example Margin Username**: `test-margin-configurator`

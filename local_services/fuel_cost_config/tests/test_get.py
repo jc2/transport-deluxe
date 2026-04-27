@@ -6,7 +6,7 @@ async def test_get_returns_latest_active_version(client, auth_token, clean_table
     headers = {"Authorization": f"Bearer {auth_token}"}
     create_resp = await client.post(
         "/fuel-cost-configs",
-        json={"customer": None, "truck_type": "reefer", "fuel_cost_per_km": "0.65"},
+        json={"customer": None, "truck_type": "Reefer", "fuel_cost_per_km": "0.65"},
         headers=headers,
     )
     config_uuid = create_resp.json()["uuid"]

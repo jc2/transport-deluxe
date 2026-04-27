@@ -150,3 +150,34 @@ services:
       CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
       CASDOOR_ISSUER: http://localhost:8000
       SESSION_SECRET: your-session-secret-key-here
+
+  costing-engine-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: costing_engine
+      POSTGRES_USER: costing_engine
+      POSTGRES_PASSWORD: costing_engine
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./persistence/costing-engine-db/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U costing_engine -d costing_engine"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  costing-engine:
+    build: ./local_services/costing_engine
+    ports:
+      - "8005:8001"
+    depends_on:
+      costing-engine-db:
+        condition: service_healthy
+      fuel-cost-config:
+        condition: service_started
+      driver-tariff-config:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+asyncpg://costing_engine:costing_engine@costing-engine-db/costing_engine
+      SESSION_SECRET: your-session-secret-key-here
+      STADIA_API_KEY: ${STADIA_API_KEY}
