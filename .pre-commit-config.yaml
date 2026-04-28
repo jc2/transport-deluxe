@@ -52,3 +52,15 @@ repos:
         exclude: ^local_services/costing_engine/tests/
         args: [--config-file=pyproject.toml, --explicit-package-bases]
         additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest", "sf-hamilton", "pandas", "numpy", "python-dotenv", "pandas-stubs"]
+      - id: mypy
+        name: mypy (margin-engine)
+        files: ^local_services/margin_engine/
+        exclude: ^local_services/margin_engine/tests/
+        args: [--config-file=pyproject.toml, --explicit-package-bases]
+        additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest", "sf-hamilton", "pandas", "numpy", "python-dotenv", "pandas-stubs"]
+      - id: mypy
+        name: mypy (pricing-engine)
+        files: ^local_services/pricing_engine/
+        exclude: ^local_services/pricing_engine/tests/
+        args: [--config-file=pyproject.toml, --explicit-package-bases]
+        additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest", "sf-hamilton", "pandas", "numpy", "python-dotenv", "pandas-stubs"]

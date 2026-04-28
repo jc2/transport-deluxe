@@ -16,7 +16,8 @@ async def base_margin_config_task(
     async with httpx.AsyncClient() as client:
         response = await client.post(BASE_MARGIN_SERVICE_URL, json=payload, timeout=10.0)
         response.raise_for_status()
-        return response.json()
+        result: dict[str, Any] = response.json()
+        return result
 
 
 async def lead_time_config_task(days_to_shipment: int) -> dict[str, Any]:
@@ -24,11 +25,12 @@ async def lead_time_config_task(days_to_shipment: int) -> dict[str, Any]:
     async with httpx.AsyncClient() as client:
         response = await client.post(LEAD_TIME_SERVICE_URL, json=payload, timeout=10.0)
         response.raise_for_status()
-        return response.json()
+        result: dict[str, Any] = response.json()
+        return result
 
 
 def initial_base_margin(all_in_cost: float, base_margin_config: dict[str, Any]) -> float:
-    margin_percent = base_margin_config.get("margin_percent", 0.0)
+    margin_percent = float(base_margin_config.get("margin_percent", 0.0))
     if margin_percent >= 1.0:
         raise ValueError("margin_percent must be < 1.0 to avoid division by zero")
     return (float(all_in_cost) * margin_percent) / (1.0 - margin_percent)
