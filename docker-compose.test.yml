@@ -1,169 +1,102 @@
 services:
-  fuel-cost-config-test-db:
+  db-test-reset:
     image: postgres:16
+    profiles: ["test"]
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
-      POSTGRES_DB: fuel_cost_config_tests
-      POSTGRES_USER: fuel_cost_config
-      POSTGRES_PASSWORD: fuel_cost_config
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - ./persistence/fuel-cost-config-test-db/postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U fuel_cost_config -d fuel_cost_config_tests"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      PGPASSWORD: postgres
+    command: >
+      bash -c "
+        until pg_isready -h postgres -U postgres; do sleep 1; done &&
+        psql -h postgres -U postgres -c 'DROP DATABASE IF EXISTS transport_deluxe_test;' &&
+        psql -h postgres -U postgres -c 'CREATE DATABASE transport_deluxe_test;' &&
+        psql -h postgres -U postgres -d transport_deluxe_test -c '
+          CREATE SCHEMA IF NOT EXISTS fuel_cost_config;
+          CREATE SCHEMA IF NOT EXISTS driver_tariff_config;
+          CREATE SCHEMA IF NOT EXISTS base_margin_config;
+          CREATE SCHEMA IF NOT EXISTS lead_time_config;
+          CREATE SCHEMA IF NOT EXISTS costing_engine;
+          CREATE SCHEMA IF NOT EXISTS margin_engine;
+          CREATE SCHEMA IF NOT EXISTS pricing_engine;
+        '
+      "
 
   fuel-cost-config-tests:
     build: ./local_services/fuel_cost_config
     command: pytest tests/ -v
+    profiles: ["test"]
     depends_on:
-      fuel-cost-config-test-db:
-        condition: service_healthy
+      db-test-reset:
+        condition: service_completed_successfully
       casdoor:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://fuel_cost_config:fuel_cost_config@fuel-cost-config-test-db/fuel_cost_config_tests
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe_test
+      DB_SCHEMA: fuel_cost_config
       CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
       CASDOOR_ISSUER: http://localhost:8000
       CASDOOR_URL: http://casdoor:8000
-    profiles:
-      - test
-
-  driver-tariff-config-test-db:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: driver_tariff_config_tests
-      POSTGRES_USER: driver_tariff_config
-      POSTGRES_PASSWORD: driver_tariff_config
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - ./persistence/driver-tariff-config-test-db/postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U driver_tariff_config -d driver_tariff_config_tests"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   driver-tariff-config-tests:
     build: ./local_services/driver_tariff_config
     command: pytest tests/ -v
+    profiles: ["test"]
     depends_on:
-      driver-tariff-config-test-db:
-        condition: service_healthy
+      db-test-reset:
+        condition: service_completed_successfully
       casdoor:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://driver_tariff_config:driver_tariff_config@driver-tariff-config-test-db/driver_tariff_config_tests
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe_test
+      DB_SCHEMA: driver_tariff_config
       CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
       CASDOOR_ISSUER: http://localhost:8000
       CASDOOR_URL: http://casdoor:8000
-    profiles:
-      - test
-
-  base-margin-config-test-db:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: base_margin_config_tests
-      POSTGRES_USER: base_margin_config
-      POSTGRES_PASSWORD: base_margin_config
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - ./persistence/base-margin-config-test-db/postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U base_margin_config -d base_margin_config_tests"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   base-margin-config-tests:
     build: ./local_services/base_margin_config
     command: pytest tests/ -v
+    profiles: ["test"]
     depends_on:
-      base-margin-config-test-db:
-        condition: service_healthy
+      db-test-reset:
+        condition: service_completed_successfully
       casdoor:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://base_margin_config:base_margin_config@base-margin-config-test-db/base_margin_config_tests
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe_test
+      DB_SCHEMA: base_margin_config
       CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
       CASDOOR_ISSUER: http://localhost:8000
       CASDOOR_URL: http://casdoor:8000
-    profiles:
-      - test
-
-  lead-time-config-test-db:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: lead_time_config_tests
-      POSTGRES_USER: lead_time_config
-      POSTGRES_PASSWORD: lead_time_config
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - ./persistence/lead-time-config-test-db/postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U lead_time_config -d lead_time_config_tests"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   lead-time-config-tests:
     build: ./local_services/lead_time_config
     command: pytest tests/ -v
+    profiles: ["test"]
     depends_on:
-      lead-time-config-test-db:
-        condition: service_healthy
+      db-test-reset:
+        condition: service_completed_successfully
       casdoor:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://lead_time_config:lead_time_config@lead-time-config-test-db/lead_time_config_tests
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe_test
+      DB_SCHEMA: lead_time_config
       CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
       CASDOOR_ISSUER: http://localhost:8000
       CASDOOR_URL: http://casdoor:8000
-    profiles:
-      - test
-
-  costing-engine-test-db:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: costing_engine_tests
-      POSTGRES_USER: costing_engine
-      POSTGRES_PASSWORD: costing_engine
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - ./persistence/costing-engine-test-db/postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U costing_engine -d costing_engine_tests"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   costing-engine-tests:
     build: ./local_services/costing_engine
     command: pytest tests/ -v
-    depends_on:
-      costing-engine-test-db:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql+asyncpg://costing_engine:costing_engine@costing-engine-test-db/costing_engine_tests
-    profiles:
-      - test
-
-  margin-engine-test-db:
     profiles: ["test"]
-    image: postgres:16
+    depends_on:
+      db-test-reset:
+        condition: service_completed_successfully
     environment:
-      POSTGRES_DB: margin_engine_test
-      POSTGRES_USER: margin_engine_test
-      POSTGRES_PASSWORD: margin_engine_test
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - ./persistence/margin-engine-test-db/postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U margin_engine_test -d margin_engine_test"]
-      interval: 1s
-      timeout: 5s
-      retries: 10
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe_test
+      DB_SCHEMA: costing_engine
 
   margin-engine-tests:
     profiles: ["test"]
@@ -173,30 +106,15 @@ services:
     command: >
       sh -c "pytest -v"
     depends_on:
-      margin-engine-test-db:
-        condition: service_healthy
+      db-test-reset:
+        condition: service_completed_successfully
       base-margin-config:
         condition: service_started
       lead-time-config:
         condition: service_started
     environment:
-      DATABASE_URL: postgresql+asyncpg://margin_engine_test:margin_engine_test@margin-engine-test-db/margin_engine_test
-
-  pricing-engine-test-db:
-    profiles: ["test"]
-    image: postgres:16
-    environment:
-      POSTGRES_DB: pricing_engine_test
-      POSTGRES_USER: pricing_engine_test
-      POSTGRES_PASSWORD: pricing_engine_test
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - ./persistence/pricing-engine-test-db/postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pricing_engine_test -d pricing_engine_test"]
-      interval: 1s
-      timeout: 5s
-      retries: 10
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe_test
+      DB_SCHEMA: margin_engine
 
   pricing-engine-tests:
     profiles: ["test"]
@@ -206,13 +124,14 @@ services:
     command: >
       sh -c "pytest -v"
     depends_on:
-      pricing-engine-test-db:
-        condition: service_healthy
+      db-test-reset:
+        condition: service_completed_successfully
       margin-engine:
         condition: service_started
       costing-engine:
         condition: service_started
     environment:
-      DATABASE_URL: postgresql+asyncpg://pricing_engine_test:pricing_engine_test@pricing-engine-test-db/pricing_engine_test
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe_test
+      DB_SCHEMA: pricing_engine
       COSTING_ENGINE_URL: http://costing-engine:8001/costing/estimate
       MARGIN_ENGINE_URL: http://margin-engine:8001/margin/estimate

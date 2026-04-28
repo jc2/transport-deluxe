@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "transport-deluxe",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "transport_deluxe",
+      "Username": "postgres",
+      "PassFile": "/tmp/pgpass",
+      "SSLMode": "prefer"
+    }
+  }
+}
