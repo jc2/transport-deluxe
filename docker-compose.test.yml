@@ -181,3 +181,38 @@ services:
         condition: service_started
     environment:
       DATABASE_URL: postgresql+asyncpg://margin_engine_test:margin_engine_test@margin-engine-test-db/margin_engine_test
+
+  pricing-engine-test-db:
+    profiles: ["test"]
+    image: postgres:16
+    environment:
+      POSTGRES_DB: pricing_engine_test
+      POSTGRES_USER: pricing_engine_test
+      POSTGRES_PASSWORD: pricing_engine_test
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./persistence/pricing-engine-test-db/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pricing_engine_test -d pricing_engine_test"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+  pricing-engine-tests:
+    profiles: ["test"]
+    build:
+      context: ./local_services/pricing_engine
+      dockerfile: Dockerfile
+    command: >
+      sh -c "pytest -v"
+    depends_on:
+      pricing-engine-test-db:
+        condition: service_healthy
+      margin-engine:
+        condition: service_started
+      costing-engine:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+asyncpg://pricing_engine_test:pricing_engine_test@pricing-engine-test-db/pricing_engine_test
+      COSTING_ENGINE_URL: http://costing-engine:8001/costing/estimate
+      MARGIN_ENGINE_URL: http://margin-engine:8001/margin/estimate

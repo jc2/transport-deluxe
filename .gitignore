@@ -19,3 +19,5 @@ persistence/lead-time-config-test-db/
 persistence/costing-engine-test-db/
 persistence/margin-engine-test-db/
 *.env
+persistence/pricing-engine-db/
+persistence/pricing-engine-test-db/
