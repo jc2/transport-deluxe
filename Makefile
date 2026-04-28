@@ -1,4 +1,4 @@
-.PHONY: up up-d test clean
+.PHONY: up up-d test clean truncate-engines
 
 # Build and bring up all normal docker containers without -d
 up:
@@ -21,3 +21,12 @@ test:
 	docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test run --rm pricing-engine-tests
 clean:
 	docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test down
+
+# Truncate all audit/result tables in the engine schemas (costing, margin, pricing).
+# Config tables (fuel_cost_config, driver_tariff_config, etc.) are NOT affected.
+truncate-engines:
+	docker exec transport-deluxe-postgres-1 psql -U postgres -d transport_deluxe -c "\
+		TRUNCATE costing_engine.costing_audit RESTART IDENTITY CASCADE; \
+		TRUNCATE margin_engine.margin_audit RESTART IDENTITY CASCADE; \
+		TRUNCATE pricing_engine.pricing_audit RESTART IDENTITY CASCADE; \
+	"
