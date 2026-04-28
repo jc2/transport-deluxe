@@ -1,28 +1,49 @@
 services:
-  casdoor-db:
+  postgres:
     image: postgres:16
     environment:
-      POSTGRES_DB: casdoor
-      POSTGRES_USER: casdoor
-      POSTGRES_PASSWORD: casdoor
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - ./persistence/casdoor/postgres/data:/var/lib/postgresql/data
+      - ./persistence/postgres/data:/var/lib/postgresql/data
+      - ./persistence/postgres/init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U casdoor -d casdoor"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 10
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: /bin/sh -c "cp /pgpass_src /tmp/pgpass && chmod 600 /tmp/pgpass && /entrypoint.sh"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@transport-deluxe.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_SERVER_JSON_FILE: /pgadmin4/servers.json
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    volumes:
+      - ./persistence/pgadmin:/var/lib/pgadmin
+      - ./external_services/pgadmin/servers.json:/pgadmin4/servers.json:ro
+      - ./external_services/pgadmin/pgpass:/pgpass_src:ro
 
   casdoor:
     image: casbin/casdoor:latest
     ports:
       - "8000:8000"
     depends_on:
-      casdoor-db:
+      postgres:
         condition: service_healthy
     environment:
       - driverName=postgres
-      - dataSourceName=host=casdoor-db user=casdoor password=casdoor dbname=casdoor port=5432 sslmode=disable
+      - dataSourceName=host=postgres user=postgres password=postgres dbname=casdoor port=5432 sslmode=disable
     volumes:
       - ./external_services/casdoor/init_data.json:/init_data.json
     healthcheck:
@@ -31,178 +52,93 @@ services:
       timeout: 5s
       retries: 10
 
-  fuel-cost-config-db:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: fuel_cost_config
-      POSTGRES_USER: fuel_cost_config
-      POSTGRES_PASSWORD: fuel_cost_config
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - ./persistence/fuel-cost-config-db/postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U fuel_cost_config -d fuel_cost_config"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
   fuel-cost-config:
     build: ./local_services/fuel_cost_config
     ports:
       - "8001:8001"
     depends_on:
-      fuel-cost-config-db:
+      postgres:
         condition: service_healthy
       casdoor:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://fuel_cost_config:fuel_cost_config@fuel-cost-config-db/fuel_cost_config
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe
+      DB_SCHEMA: fuel_cost_config
       CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
       CASDOOR_ISSUER: http://localhost:8000
       SESSION_SECRET: your-session-secret-key-here
-
-  driver-tariff-config-db:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: driver_tariff_config
-      POSTGRES_USER: driver_tariff_config
-      POSTGRES_PASSWORD: driver_tariff_config
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - ./persistence/driver-tariff-config-db/postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U driver_tariff_config -d driver_tariff_config"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   driver-tariff-config:
     build: ./local_services/driver_tariff_config
     ports:
       - "8002:8001"
     depends_on:
-      driver-tariff-config-db:
+      postgres:
         condition: service_healthy
       casdoor:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://driver_tariff_config:driver_tariff_config@driver-tariff-config-db/driver_tariff_config
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe
+      DB_SCHEMA: driver_tariff_config
       CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
       CASDOOR_ISSUER: http://localhost:8000
       SESSION_SECRET: your-session-secret-key-here
-
-  base-margin-config-db:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: base_margin_config
-      POSTGRES_USER: base_margin_config
-      POSTGRES_PASSWORD: base_margin_config
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - ./persistence/base-margin-config-db/postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U base_margin_config -d base_margin_config"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   base-margin-config:
     build: ./local_services/base_margin_config
     ports:
       - "8003:8003"
     depends_on:
-      base-margin-config-db:
+      postgres:
         condition: service_healthy
       casdoor:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://base_margin_config:base_margin_config@base-margin-config-db/base_margin_config
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe
+      DB_SCHEMA: base_margin_config
       CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
       CASDOOR_ISSUER: http://localhost:8000
       SESSION_SECRET: your-session-secret-key-here
-
-  lead-time-config-db:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: lead_time_config
-      POSTGRES_USER: lead_time_config
-      POSTGRES_PASSWORD: lead_time_config
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - ./persistence/lead-time-config-db/postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U lead_time_config -d lead_time_config"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   lead-time-config:
     build: ./local_services/lead_time_config
     ports:
       - "8004:8004"
     depends_on:
-      lead-time-config-db:
+      postgres:
         condition: service_healthy
       casdoor:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://lead_time_config:lead_time_config@lead-time-config-db/lead_time_config
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe
+      DB_SCHEMA: lead_time_config
       CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
       CASDOOR_ISSUER: http://localhost:8000
       SESSION_SECRET: your-session-secret-key-here
-
-  costing-engine-db:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: costing_engine
-      POSTGRES_USER: costing_engine
-      POSTGRES_PASSWORD: costing_engine
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - ./persistence/costing-engine-db/postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U costing_engine -d costing_engine"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   costing-engine:
     build: ./local_services/costing_engine
     ports:
       - "8005:8001"
     depends_on:
-      costing-engine-db:
+      postgres:
         condition: service_healthy
       fuel-cost-config:
         condition: service_started
       driver-tariff-config:
         condition: service_started
     environment:
-      DATABASE_URL: postgresql+asyncpg://costing_engine:costing_engine@costing-engine-db/costing_engine
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe
+      DB_SCHEMA: costing_engine
       SESSION_SECRET: your-session-secret-key-here
       STADIA_API_KEY: ${STADIA_API_KEY}
-
-  margin-engine-db:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: margin_engine
-      POSTGRES_USER: margin_engine
-      POSTGRES_PASSWORD: margin_engine
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - ./persistence/margin-engine-db/postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U margin_engine -d margin_engine"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   margin-engine:
     build: ./local_services/margin_engine
     ports:
       - "8006:8001"
     depends_on:
-      margin-engine-db:
+      postgres:
         condition: service_healthy
       base-margin-config:
         condition: service_started
@@ -211,36 +147,23 @@ services:
       costing-engine:
         condition: service_started
     environment:
-      DATABASE_URL: postgresql+asyncpg://margin_engine:margin_engine@margin-engine-db/margin_engine
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe
+      DB_SCHEMA: margin_engine
       SESSION_SECRET: your-session-secret-key-here
-
-  pricing-engine-db:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: pricing_engine
-      POSTGRES_USER: pricing_engine
-      POSTGRES_PASSWORD: pricing_engine
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - ./persistence/pricing-engine-db/postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pricing_engine -d pricing_engine"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   pricing-engine:
     build: ./local_services/pricing_engine
     ports:
       - "8007:8001"
     depends_on:
-      pricing-engine-db:
+      postgres:
         condition: service_healthy
       costing-engine:
         condition: service_started
       margin-engine:
         condition: service_started
     environment:
-      DATABASE_URL: postgresql+asyncpg://pricing_engine:pricing_engine@pricing-engine-db/pricing_engine
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe
+      DB_SCHEMA: pricing_engine
       COSTING_ENGINE_URL: http://costing-engine:8001/costing/estimate
       MARGIN_ENGINE_URL: http://margin-engine:8001/margin/estimate

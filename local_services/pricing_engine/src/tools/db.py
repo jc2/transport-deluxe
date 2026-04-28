@@ -7,7 +7,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 def _make_engine() -> AsyncEngine:
     url = os.environ["DATABASE_URL"]
-    return create_async_engine(url, echo=False)
+    schema = os.environ.get("DB_SCHEMA", "public")
+    return create_async_engine(
+        url,
+        echo=False,
+        connect_args={"server_settings": {"search_path": f"{schema},public"}},
+    )
 
 
 engine = _make_engine()

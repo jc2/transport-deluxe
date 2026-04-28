@@ -23,25 +23,33 @@ def _get_url() -> str:
 
 def run_migrations_offline() -> None:
     url = _get_url()
+    schema = os.environ.get("DB_SCHEMA", "public")
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        version_table_schema=schema,
     )
     with context.begin_transaction():
         context.run_migrations()
 
 
 def do_run_migrations(connection: Any) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    schema = os.environ.get("DB_SCHEMA", "public")
+    context.configure(connection=connection, target_metadata=target_metadata, version_table_schema=schema)
     with context.begin_transaction():
         context.run_migrations()
 
 
 async def run_async_migrations() -> None:
     url = _get_url()
-    connectable = create_async_engine(url, poolclass=pool.NullPool)
+    schema = os.environ.get("DB_SCHEMA", "public")
+    connectable = create_async_engine(
+        url,
+        poolclass=pool.NullPool,
+        connect_args={"server_settings": {"search_path": f"{schema},public"}},
+    )
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
     await connectable.dispose()
