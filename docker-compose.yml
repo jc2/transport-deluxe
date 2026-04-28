@@ -213,3 +213,34 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://margin_engine:margin_engine@margin-engine-db/margin_engine
       SESSION_SECRET: your-session-secret-key-here
+
+  pricing-engine-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: pricing_engine
+      POSTGRES_USER: pricing_engine
+      POSTGRES_PASSWORD: pricing_engine
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./persistence/pricing-engine-db/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pricing_engine -d pricing_engine"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pricing-engine:
+    build: ./local_services/pricing_engine
+    ports:
+      - "8007:8001"
+    depends_on:
+      pricing-engine-db:
+        condition: service_healthy
+      costing-engine:
+        condition: service_started
+      margin-engine:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+asyncpg://pricing_engine:pricing_engine@pricing-engine-db/pricing_engine
+      COSTING_ENGINE_URL: http://costing-engine:8001/costing/estimate
+      MARGIN_ENGINE_URL: http://margin-engine:8001/margin/estimate
