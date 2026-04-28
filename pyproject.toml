@@ -11,6 +11,7 @@ dependencies = [
     "lead-time-config",
     "costing-engine",
     "margin-engine",
+    "pricing-engine",
 ]
 
 [tool.uv.sources]
@@ -20,6 +21,7 @@ base-margin-config = { path = "local_services/base_margin_config", editable = tr
 lead-time-config = { path = "local_services/lead_time_config", editable = true }
 costing-engine = { path = "local_services/costing_engine", editable = true }
 margin-engine = { path = "local_services/margin_engine", editable = true }
+pricing-engine = { path = "local_services/pricing_engine", editable = true }
 
 [dependency-groups]
 dev = [
@@ -39,6 +41,7 @@ module = [
     "lead_time_config.tests.*",
     "costing_engine.tests.*",
     "margin_engine.tests.*",
+    "pricing_engine.tests.*",
     "tests.*"
 ]
 disallow_untyped_defs = false
@@ -52,6 +55,7 @@ module = [
     "lead_time_config.src.modules.lead_time_config.admin",
     "costing_engine.src.modules.costing.admin",
     "margin_engine.src.modules.margin.admin",
+    "pricing_engine.src.modules.pricing.admin",
     "fuel_cost_config.src.tools.admin_auth",
     "driver_tariff_config.src.tools.admin_auth",
     "base_margin_config.src.tools.admin_auth",
@@ -77,5 +81,6 @@ extraPaths = [
     "local_services/base_margin_config",
     "local_services/lead_time_config",
     "local_services/costing_engine",
-    "local_services/margin_engine"
+    "local_services/margin_engine",
+    "local_services/pricing_engine"
 ]
