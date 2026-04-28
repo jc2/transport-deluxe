@@ -4,12 +4,16 @@
 
 | Port | Service | Purpose |
 |------|---------|---------|
+| 5432 | postgres | Unified PostgreSQL 16 instance (databases: `casdoor`, `transport_deluxe`, `transport_deluxe_test`) |
+| 5050 | pgAdmin 4 | PostgreSQL web admin UI |
 | 8000 | Casdoor (Identity Provider / OAuth 2.0) | Authentication & authorization |
 | 8001 | fuel-cost-config | Fuel Cost Configuration Management |
 | 8002 | driver-tariff-config | Driver Tariff Configuration Management |
 | 8003 | base-margin-config | Base Margin Configuration Management |
 | 8004 | lead-time-config | Lead Time Configuration Management |
 | 8005 | costing-engine | Transport Costing Workflow Engine |
+| 8006 | margin-engine | Margin Calculation Engine |
+| 8007 | pricing-engine | Price Calculation Engine |
 
 
 ## External Services (Cloud APIs)
@@ -32,7 +36,14 @@ To test the services via CLI:
 make up
 ```
 
-This starts Casdoor + its database, the `fuel-cost-config` service (at `http://localhost:8001`), the `driver-tariff-config` service (at `http://localhost:8002`), the `base-margin-config` service (at `http://localhost:8003`), and the `lead-time-config` service (at `http://localhost:8004`), along with their respective databases.
+This starts a unified PostgreSQL 16 instance (shared by all services), pgAdmin 4 (`http://localhost:5050`), Casdoor (`http://localhost:8000`), and all local services:
+- `fuel-cost-config` at `http://localhost:8001`
+- `driver-tariff-config` at `http://localhost:8002`
+- `base-margin-config` at `http://localhost:8003`
+- `lead-time-config` at `http://localhost:8004`
+- `costing-engine` at `http://localhost:8005`
+- `margin-engine` at `http://localhost:8006`
+- `pricing-engine` at `http://localhost:8007`
 
 To start the stack in detached mode:
 
@@ -103,7 +114,23 @@ The services include an embedded SQLAdmin interface to manage configurations.
    - **Base Margin Config**: [http://localhost:8003/admin](http://localhost:8003/admin)
    - **Lead Time Config**: [http://localhost:8004/admin](http://localhost:8004/admin)
    - **Costing Engine**: [http://localhost:8005/admin](http://localhost:8005/admin)
+   - **Margin Engine**: [http://localhost:8006/admin](http://localhost:8006/admin)
+   - **Pricing Engine**: [http://localhost:8007/admin](http://localhost:8007/admin)
 3. Authenticate using Casdoor credentials. You must use an account that has the required config role (`cost-configurator` or `margin-configurator`).
    - **Example Cost Username**: `test-cost-configurator`
    - **Example Margin Username**: `test-margin-configurator`
    - **Example Password**: `test123`
+
+## pgAdmin 4
+
+A pgAdmin 4 instance is included for database inspection.
+
+1. Open [http://localhost:5050](http://localhost:5050)
+2. Login with:
+   - **Email**: `admin@transport-deluxe.com`
+   - **Password**: `admin`
+3. The server **transport-deluxe** (PostgreSQL on `postgres:5432`) is pre-configured and connects automatically.
+4. Databases:
+   - `casdoor` — Casdoor identity provider data
+   - `transport_deluxe` — all local services, each in its own schema (`fuel_cost_config`, `driver_tariff_config`, `base_margin_config`, `lead_time_config`, `costing_engine`, `margin_engine`, `pricing_engine`)
+   - `transport_deluxe_test` — same schema structure, used by integration tests
