@@ -137,24 +137,18 @@ async def run_margin_workflow(
 
     await session.commit()
 
-    bm_uuid = base_margin_config.get("id")
-    bm_version = base_margin_config.get("version")
-    lt_uuid = lead_time_config.get("id")
-    lt_version = lead_time_config.get("version")
+    def make_adjustment(logic_dict: dict[str, Any]) -> MarginAdjustment:
+        cuuid = logic_dict.get("config_uuid")
+        return MarginAdjustment(
+            name=logic_dict["name"],
+            amount=Decimal(str(logic_dict["amount"])),
+            config_uuid=uuid_lib.UUID(cuuid) if cuuid else None,
+            config_version=int(logic_dict["config_version"]) if logic_dict.get("config_version") is not None else None,
+        )
 
     adjustments = [
-        MarginAdjustment(
-            name="initial_base_margin",
-            amount=Decimal(str(logic_results["initial_base_margin"])),
-            config_uuid=uuid_lib.UUID(bm_uuid) if bm_uuid else None,
-            config_version=int(bm_version) if bm_version else None,
-        ),
-        MarginAdjustment(
-            name="lead_time_adjustment",
-            amount=Decimal(str(logic_results["lead_time_adjustment"])),
-            config_uuid=uuid_lib.UUID(lt_uuid) if lt_uuid else None,
-            config_version=int(lt_version) if lt_version else None,
-        ),
+        make_adjustment(logic_results["initial_base_margin"]),
+        make_adjustment(logic_results["lead_time_adjustment"]),
     ]
 
     return MarginResponse(

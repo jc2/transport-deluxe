@@ -167,3 +167,19 @@ services:
       DB_SCHEMA: pricing_engine
       COSTING_ENGINE_URL: http://costing-engine:8001/costing/estimate
       MARGIN_ENGINE_URL: http://margin-engine:8001/margin/estimate
+
+  transport-deluxe-core:
+    build: ./local_services/transport_deluxe_core
+    ports:
+      - "8008:8008"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      costing-engine:
+        condition: service_started
+      margin-engine:
+        condition: service_started
+      pricing-engine:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe

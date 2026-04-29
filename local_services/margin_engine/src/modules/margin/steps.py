@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 from typing import Any
 
 import httpx
@@ -29,17 +30,29 @@ async def lead_time_config_task(days_to_shipment: int) -> dict[str, Any]:
         return result
 
 
-def initial_base_margin(all_in_cost: float, base_margin_config: dict[str, Any]) -> float:
-    margin_percent = float(base_margin_config.get("margin_percent", 0.0))
-    if margin_percent >= 1.0:
+def initial_base_margin(all_in_cost: float, base_margin_config: dict[str, Any]) -> dict[str, Any]:
+    margin_percent = Decimal(str(base_margin_config.get("margin_percent", 0.0)))
+    if margin_percent >= Decimal("1.0"):
         raise ValueError("margin_percent must be < 1.0 to avoid division by zero")
-    return (float(all_in_cost) * margin_percent) / (1.0 - margin_percent)
+    amount = (Decimal(str(all_in_cost)) * margin_percent) / (Decimal("1.0") - margin_percent)
+    return {
+        "name": "Initial Base Margin",
+        "amount": amount,
+        "config_uuid": base_margin_config.get("id"),
+        "config_version": base_margin_config.get("version"),
+    }
 
 
-def lead_time_adjustment(initial_base_margin: float, lead_time_config: dict[str, Any]) -> float:
-    configuration_factor = lead_time_config.get("configuration_factor", 0.0)
-    return initial_base_margin * float(configuration_factor)
+def lead_time_adjustment(initial_base_margin: dict[str, Any], lead_time_config: dict[str, Any]) -> dict[str, Any]:
+    configuration_factor = Decimal(str(lead_time_config.get("configuration_factor", 0.0)))
+    amount = Decimal(str(initial_base_margin["amount"])) * configuration_factor
+    return {
+        "name": "Lead Time Adjustment",
+        "amount": amount,
+        "config_uuid": lead_time_config.get("id"),
+        "config_version": lead_time_config.get("version"),
+    }
 
 
-def all_in_margin(initial_base_margin: float, lead_time_adjustment: float) -> float:
-    return initial_base_margin + lead_time_adjustment
+def all_in_margin(initial_base_margin: dict[str, Any], lead_time_adjustment: dict[str, Any]) -> Decimal:
+    return Decimal(str(initial_base_margin["amount"])) + Decimal(str(lead_time_adjustment["amount"]))

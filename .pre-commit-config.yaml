@@ -64,3 +64,9 @@ repos:
         exclude: ^local_services/pricing_engine/tests/
         args: [--config-file=pyproject.toml, --explicit-package-bases]
         additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest", "sf-hamilton", "pandas", "numpy", "python-dotenv", "pandas-stubs"]
+      - id: mypy
+        name: mypy (transport-deluxe-core)
+        files: ^local_services/transport_deluxe_core/
+        exclude: ^local_services/transport_deluxe_core/tests/
+        args: [--config-file=pyproject.toml, --explicit-package-bases]
+        additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "pytest"]
