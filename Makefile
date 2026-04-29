@@ -31,3 +31,33 @@ truncate-engines:
 		TRUNCATE margin_engine.margin_audit RESTART IDENTITY CASCADE; \
 		TRUNCATE pricing_engine.pricing_audit RESTART IDENTITY CASCADE; \
 	"
+
+# Dump all postgres databases to the backup folder
+dump-db:
+	@RUNNING=$$(docker ps -q -f name=transport-deluxe-postgres-1); \
+	if [ -z "$$RUNNING" ]; then \
+		echo "Starting postgres temporarily..."; \
+		docker compose up -d postgres; \
+		echo "Waiting for postgres to be ready..."; \
+		until docker exec transport-deluxe-postgres-1 pg_isready -U postgres; do sleep 1; done; \
+		docker exec transport-deluxe-postgres-1 pg_dumpall -U postgres -c > backup/postgres_dump.sql; \
+		echo "Stopping postgres..."; \
+		docker compose stop postgres; \
+	else \
+		docker exec transport-deluxe-postgres-1 pg_dumpall -U postgres -c > backup/postgres_dump.sql; \
+	fi
+
+# Restore the postgres databases from the backup folder
+load-db:
+	@RUNNING=$$(docker ps -q -f name=transport-deluxe-postgres-1); \
+	if [ -z "$$RUNNING" ]; then \
+		echo "Starting postgres temporarily..."; \
+		docker compose up -d postgres; \
+		echo "Waiting for postgres to be ready..."; \
+		until docker exec transport-deluxe-postgres-1 pg_isready -U postgres; do sleep 1; done; \
+		cat backup/postgres_dump.sql | docker exec -i transport-deluxe-postgres-1 psql -U postgres; \
+		echo "Stopping postgres..."; \
+		docker compose stop postgres; \
+	else \
+		cat backup/postgres_dump.sql | docker exec -i transport-deluxe-postgres-1 psql -U postgres; \
+	fi

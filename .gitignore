@@ -1,7 +1,3 @@
-# Test databases - completely excluded
-persistence/driver-tariff-config-test-db/
-persistence/fuel-cost-config-test-db/
-
 # Python
 __pycache__/
 *.pyc
@@ -14,10 +10,8 @@ venv/
 *.tmp
 *.swp
 
-persistence/base-margin-config-test-db/
-persistence/lead-time-config-test-db/
-persistence/costing-engine-test-db/
-persistence/margin-engine-test-db/
+# Environment variables
 *.env
-persistence/pricing-engine-db/
-persistence/pricing-engine-test-db/
+
+# Local data and databases
+persistence/
