@@ -12,6 +12,7 @@ dependencies = [
     "costing-engine",
     "margin-engine",
     "pricing-engine",
+    "transport-deluxe-core",
 ]
 
 [tool.uv.sources]
@@ -22,6 +23,7 @@ lead-time-config = { path = "local_services/lead_time_config", editable = true }
 costing-engine = { path = "local_services/costing_engine", editable = true }
 margin-engine = { path = "local_services/margin_engine", editable = true }
 pricing-engine = { path = "local_services/pricing_engine", editable = true }
+transport-deluxe-core = { path = "local_services/transport_deluxe_core", editable = true }
 
 [dependency-groups]
 dev = [
@@ -82,5 +84,6 @@ extraPaths = [
     "local_services/lead_time_config",
     "local_services/costing_engine",
     "local_services/margin_engine",
-    "local_services/pricing_engine"
+    "local_services/pricing_engine",
+    "local_services/transport_deluxe_core"
 ]

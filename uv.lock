@@ -1389,6 +1389,7 @@ dependencies = [
     { name = "lead-time-config" },
     { name = "margin-engine" },
     { name = "pricing-engine" },
+    { name = "transport-deluxe-core" },
 ]
 
 [package.dev-dependencies]
@@ -1406,12 +1407,41 @@ requires-dist = [
     { name = "lead-time-config", editable = "local_services/lead_time_config" },
     { name = "margin-engine", editable = "local_services/margin_engine" },
     { name = "pricing-engine", editable = "local_services/pricing_engine" },
+    { name = "transport-deluxe-core", editable = "local_services/transport_deluxe_core" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "mypy", specifier = ">=1.15.0" },
     { name = "pre-commit", specifier = ">=4.2.0" },
+]
+
+[[package]]
+name = "transport-deluxe-core"
+version = "0.1.0"
+source = { editable = "local_services/transport_deluxe_core" }
+dependencies = [
+    { name = "asyncpg" },
+    { name = "fastapi", extra = ["standard"] },
+    { name = "httpx" },
+    { name = "sqlmodel" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "asyncpg", specifier = ">=0.29.0" },
+    { name = "fastapi", extras = ["standard"], specifier = ">=0.115.0" },
+    { name = "httpx", specifier = ">=0.27.0" },
+    { name = "sqlmodel", specifier = ">=0.0.21" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.30.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "anyio", extras = ["trio"], specifier = ">=4.0.0" },
+    { name = "pytest", specifier = ">=8.0.0" },
+    { name = "pytest-asyncio", specifier = ">=0.23.0" },
 ]
 
 [[package]]

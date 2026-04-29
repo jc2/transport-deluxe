@@ -135,3 +135,16 @@ services:
       DB_SCHEMA: pricing_engine
       COSTING_ENGINE_URL: http://costing-engine:8001/costing/estimate
       MARGIN_ENGINE_URL: http://margin-engine:8001/margin/estimate
+
+  transport-deluxe-core-tests:
+    profiles: ["test"]
+    build:
+      context: ./local_services/transport_deluxe_core
+      dockerfile: Dockerfile
+    command: >
+      sh -c "pytest -v"
+    depends_on:
+      db-test-reset:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe_test

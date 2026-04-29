@@ -14,6 +14,7 @@
 | 8005 | costing-engine | Transport Costing Workflow Engine |
 | 8006 | margin-engine | Margin Calculation Engine |
 | 8007 | pricing-engine | Price Calculation Engine |
+| 8008 | transport-deluxe-core | Cross-engine Reporting Service |
 
 
 ## External Services (Cloud APIs)
