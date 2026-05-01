@@ -79,3 +79,15 @@ async def client(test_db):
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+
+@pytest_asyncio.fixture(scope="function")
+async def mcp_client(test_db, clean_table):
+    import src.modules.base_margin_config.mcp_tools as mcp_tools_module
+    from fastmcp import Client
+    from src.modules.base_margin_config.mcp_server import mcp
+
+    mcp_tools_module.engine = test_db
+
+    async with Client(mcp) as c:
+        yield c

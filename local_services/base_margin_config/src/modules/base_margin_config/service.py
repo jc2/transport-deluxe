@@ -78,12 +78,46 @@ async def create_base_margin_config(
     return record
 
 
-async def list_base_margin_configs(session: AsyncSession) -> Sequence[BaseMarginConfig]:
+async def list_base_margin_configs(
+    session: AsyncSession,
+    customer_name: str | None = None,
+    customer_subname: str | None = None,
+    pickup_country: str | None = None,
+    pickup_state: str | None = None,
+    pickup_city: str | None = None,
+    pickup_postal_code: str | None = None,
+    drop_country: str | None = None,
+    drop_state: str | None = None,
+    drop_city: str | None = None,
+    drop_postal_code: str | None = None,
+) -> Sequence[BaseMarginConfig]:
     stmt = (
         select(BaseMarginConfig)
         .distinct(col(BaseMarginConfig.uuid))
         .order_by(col(BaseMarginConfig.uuid), col(BaseMarginConfig.version).desc())
     )
+
+    if customer_name is not None:
+        stmt = stmt.where(BaseMarginConfig.customer_name == customer_name)
+    if customer_subname is not None:
+        stmt = stmt.where(BaseMarginConfig.customer_subname == customer_subname)
+    if pickup_country is not None:
+        stmt = stmt.where(BaseMarginConfig.pickup_country == pickup_country)
+    if pickup_state is not None:
+        stmt = stmt.where(BaseMarginConfig.pickup_state == pickup_state)
+    if pickup_city is not None:
+        stmt = stmt.where(BaseMarginConfig.pickup_city == pickup_city)
+    if pickup_postal_code is not None:
+        stmt = stmt.where(BaseMarginConfig.pickup_postal_code == pickup_postal_code)
+    if drop_country is not None:
+        stmt = stmt.where(BaseMarginConfig.drop_country == drop_country)
+    if drop_state is not None:
+        stmt = stmt.where(BaseMarginConfig.drop_state == drop_state)
+    if drop_city is not None:
+        stmt = stmt.where(BaseMarginConfig.drop_city == drop_city)
+    if drop_postal_code is not None:
+        stmt = stmt.where(BaseMarginConfig.drop_postal_code == drop_postal_code)
+
     result = await session.exec(stmt)
     return result.all()
 
@@ -107,20 +141,57 @@ async def update_base_margin_config(
 ) -> BaseMarginConfig:
     current = await get_base_margin_config(session, uuid_val)
 
+    c_name = req.customer.name if req.customer else None
+    c_subname = req.customer.subname if req.customer else None
+
+    p_country = req.pickup.country if req.pickup and req.pickup.country else None
+    p_state = req.pickup.state if req.pickup and req.pickup.state else None
+    p_city = req.pickup.city if req.pickup and req.pickup.city else None
+    p_postal_code = req.pickup.postal_code if req.pickup and req.pickup.postal_code else None
+
+    d_country = req.drop.country if req.drop and req.drop.country else None
+    d_state = req.drop.state if req.drop and req.drop.state else None
+    d_city = req.drop.city if req.drop and req.drop.city else None
+    d_postal_code = req.drop.postal_code if req.drop and req.drop.postal_code else None
+
+    stmt = (
+        select(func.count())
+        .select_from(BaseMarginConfig)
+        .where(
+            BaseMarginConfig.customer_name == c_name,
+            BaseMarginConfig.customer_subname == c_subname,
+            BaseMarginConfig.pickup_country == p_country,
+            BaseMarginConfig.pickup_state == p_state,
+            BaseMarginConfig.pickup_city == p_city,
+            BaseMarginConfig.pickup_postal_code == p_postal_code,
+            BaseMarginConfig.drop_country == d_country,
+            BaseMarginConfig.drop_state == d_state,
+            BaseMarginConfig.drop_city == d_city,
+            BaseMarginConfig.drop_postal_code == d_postal_code,
+            BaseMarginConfig.uuid != current.uuid,
+        )
+    )
+    result = await session.exec(stmt)
+    count = result.one()
+    if count > 0:
+        raise HTTPException(
+            status_code=409, detail="A Base Margin Configuration already exists with these exact parameters."
+        )
+
     new_version = current.version + 1
     new_record = BaseMarginConfig(
         uuid=current.uuid,
         version=new_version,
-        customer_name=current.customer_name,
-        customer_subname=current.customer_subname,
-        pickup_country=current.pickup_country,
-        pickup_state=current.pickup_state,
-        pickup_city=current.pickup_city,
-        pickup_postal_code=current.pickup_postal_code,
-        drop_country=current.drop_country,
-        drop_state=current.drop_state,
-        drop_city=current.drop_city,
-        drop_postal_code=current.drop_postal_code,
+        customer_name=c_name,
+        customer_subname=c_subname,
+        pickup_country=p_country,
+        pickup_state=p_state,
+        pickup_city=p_city,
+        pickup_postal_code=p_postal_code,
+        drop_country=d_country,
+        drop_state=d_state,
+        drop_city=d_city,
+        drop_postal_code=d_postal_code,
         margin_percent=req.margin_percent,
         created_by=created_by,
     )

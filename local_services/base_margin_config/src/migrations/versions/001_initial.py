@@ -39,6 +39,23 @@ def upgrade() -> None:
         sa.Column("created_by", sa.String(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("uuid", "version"),
+        sa.CheckConstraint(
+            "customer_subname IS NULL OR customer_name IS NOT NULL", name="chk_customer_subname_requires_name"
+        ),
+        sa.CheckConstraint(
+            "pickup_state IS NULL OR pickup_country IS NOT NULL", name="chk_pickup_state_requires_country"
+        ),
+        sa.CheckConstraint("pickup_city IS NULL OR pickup_state IS NOT NULL", name="chk_pickup_city_requires_state"),
+        sa.CheckConstraint(
+            "pickup_postal_code IS NULL OR pickup_city IS NOT NULL", name="chk_pickup_postal_requires_city"
+        ),
+        sa.CheckConstraint("drop_state IS NULL OR drop_country IS NOT NULL", name="chk_drop_state_requires_country"),
+        sa.CheckConstraint("drop_city IS NULL OR drop_state IS NOT NULL", name="chk_drop_city_requires_state"),
+        sa.CheckConstraint("drop_postal_code IS NULL OR drop_city IS NOT NULL", name="chk_drop_postal_requires_city"),
+        sa.CheckConstraint(
+            "customer_name IS NOT NULL OR pickup_country IS NOT NULL OR drop_country IS NOT NULL",
+            name="chk_at_least_one_field",
+        ),
     )
 
     op.create_index(
