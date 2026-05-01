@@ -1,0 +1,7 @@
+{
+  "servers": {
+    "base_margin_config": {
+      "url": "http://localhost:8003/mcp"
+    }
+  }
+}

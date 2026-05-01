@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Optional
 
 from pydantic import field_validator, model_validator
+from sqlalchemy import CheckConstraint
 from sqlmodel import Field, SQLModel
 
 
@@ -42,6 +43,27 @@ class Load(SQLModel):
 
 class BaseMarginConfig(SQLModel, table=True):
     __tablename__ = "base_margin_config"
+    __table_args__ = (
+        # Customer hierarchy
+        CheckConstraint(
+            "customer_subname IS NULL OR customer_name IS NOT NULL", name="chk_customer_subname_requires_name"
+        ),
+        # Pickup hierarchy
+        CheckConstraint("pickup_state IS NULL OR pickup_country IS NOT NULL", name="chk_pickup_state_requires_country"),
+        CheckConstraint("pickup_city IS NULL OR pickup_state IS NOT NULL", name="chk_pickup_city_requires_state"),
+        CheckConstraint(
+            "pickup_postal_code IS NULL OR pickup_city IS NOT NULL", name="chk_pickup_postal_requires_city"
+        ),
+        # Drop hierarchy
+        CheckConstraint("drop_state IS NULL OR drop_country IS NOT NULL", name="chk_drop_state_requires_country"),
+        CheckConstraint("drop_city IS NULL OR drop_state IS NOT NULL", name="chk_drop_city_requires_state"),
+        CheckConstraint("drop_postal_code IS NULL OR drop_city IS NOT NULL", name="chk_drop_postal_requires_city"),
+        # At least one definition
+        CheckConstraint(
+            "customer_name IS NOT NULL OR pickup_country IS NOT NULL OR drop_country IS NOT NULL",
+            name="chk_at_least_one_field",
+        ),
+    )
 
     uuid: uuid_lib.UUID = Field(sa_column_kwargs={"primary_key": True})
     version: int = Field(sa_column_kwargs={"primary_key": True})
@@ -111,7 +133,7 @@ class BaseMarginConfigResponse(SQLModel):
         )
 
 
-class CreateRequest(SQLModel):
+class BaseMarginConfigRequest(SQLModel):
     customer: Customer | None = None
     pickup: Stop | None = None
     drop: Stop | None = None
@@ -125,13 +147,13 @@ class CreateRequest(SQLModel):
         return v
 
     @model_validator(mode="after")
-    def subname_requires_name(self) -> "CreateRequest":
+    def subname_requires_name(self) -> "BaseMarginConfigRequest":
         if self.customer is not None and self.customer.subname is not None and self.customer.name is None:
             raise ValueError("customer.subname requires customer.name to be set")
         return self
 
     @model_validator(mode="after")
-    def check_at_least_one_field(self) -> "CreateRequest":
+    def check_at_least_one_field(self) -> "BaseMarginConfigRequest":
         has_cust = self.customer and (self.customer.name or self.customer.subname)
         has_pickup = self.pickup and (
             self.pickup.country or self.pickup.state or self.pickup.city or self.pickup.postal_code
@@ -146,15 +168,12 @@ class CreateRequest(SQLModel):
         return self
 
 
-class UpdateRequest(SQLModel):
-    margin_percent: float
+class CreateRequest(BaseMarginConfigRequest):
+    pass
 
-    @field_validator("margin_percent")
-    @classmethod
-    def margin_must_be_valid(cls, v: float) -> float:
-        if v < 0 or v > 0.99:
-            raise ValueError("margin_percent must be between 0 and 0.99")
-        return v
+
+class UpdateRequest(BaseMarginConfigRequest):
+    pass
 
 
 class ResolveRequest(SQLModel):

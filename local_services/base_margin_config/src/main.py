@@ -6,9 +6,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastmcp.utilities.lifespan import combine_lifespans  # type: ignore
 from sqladmin import Admin
 
+import src.modules.base_margin_config.mcp_tools  # noqa: F401
 from src.modules.base_margin_config.admin import BaseMarginConfigAdmin
+from src.modules.base_margin_config.mcp_server import mcp
 from src.modules.base_margin_config.router import router
 from src.tools.admin_auth import AdminAuth
 from src.tools.auth import fetch_jwks
@@ -40,7 +43,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
 
-app = FastAPI(title="Base Margin Configuration Service", lifespan=lifespan)
+mcp_app = mcp.http_app(path="/", transport="streamable-http")
+
+app = FastAPI(title="Base Margin Configuration Service", lifespan=combine_lifespans(lifespan, mcp_app.lifespan))
 
 admin_auth = AdminAuth(secret_key=os.environ.get("SESSION_SECRET", "super-secret-key"))
 admin = Admin(app, engine, authentication_backend=admin_auth)
@@ -79,3 +84,4 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 
 
 app.include_router(router, prefix="/base-margin-configs")
+app.mount("/mcp", mcp_app)
