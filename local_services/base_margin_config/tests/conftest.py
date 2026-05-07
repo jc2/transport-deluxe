@@ -10,7 +10,7 @@ from src.main import app
 
 CASDOOR_URL = os.environ.get("CASDOOR_URL", "http://localhost:8000")
 CLIENT_ID = "transport-deluxe-client"
-CLIENT_SECRET = "transport-deluxe-secret"
+CLIENT_SECRET = os.environ.get("CASDOOR_CLIENT_SECRET", "transport-deluxe-secret")
 
 
 @pytest_asyncio.fixture(scope="session")

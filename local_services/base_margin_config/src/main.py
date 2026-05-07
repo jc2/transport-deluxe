@@ -47,7 +47,7 @@ mcp_app = mcp.http_app(path="/", transport="streamable-http")
 
 app = FastAPI(title="Base Margin Configuration Service", lifespan=combine_lifespans(lifespan, mcp_app.lifespan))
 
-admin_auth = AdminAuth(secret_key=os.environ.get("SESSION_SECRET", "super-secret-key"))
+admin_auth = AdminAuth(secret_key=os.environ["SESSION_SECRET"])
 admin = Admin(app, engine, authentication_backend=admin_auth)
 admin.add_view(BaseMarginConfigAdmin)
 

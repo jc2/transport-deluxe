@@ -9,6 +9,9 @@ from sqladmin.authentication import AuthenticationBackend
 
 logger = logging.getLogger(__name__)
 
+SERVICE_NAME = "base_margin_config"
+REQUIRED_ROLE = "margin-configurator"
+
 
 class AdminAuth(AuthenticationBackend):
     async def login(self, request: Request) -> bool:
@@ -29,7 +32,7 @@ class AdminAuth(AuthenticationBackend):
                     data={
                         "grant_type": "password",
                         "client_id": "transport-deluxe-client",
-                        "client_secret": "transport-deluxe-secret",
+                        "client_secret": os.environ["CASDOOR_CLIENT_SECRET"],
                         "username": username,
                         "password": password,
                         "scope": "openid profile",
@@ -65,7 +68,13 @@ class AdminAuth(AuthenticationBackend):
             return False
 
         # Save minimal info in signed session cookie
-        request.session.update({"admin_user": jwt_name})
+        request.session.update(
+            {
+                "admin_user": jwt_name,
+                "service": SERVICE_NAME,
+                "role": REQUIRED_ROLE,
+            }
+        )
         return True
 
     async def logout(self, request: Request) -> bool:
@@ -73,8 +82,8 @@ class AdminAuth(AuthenticationBackend):
         return True
 
     async def authenticate(self, request: Request) -> bool:
-        # Starlette session cookie is cryptographically signed
-        admin_user = request.session.get("admin_user")
-        if not admin_user:
+        if request.session.get("service") != SERVICE_NAME:
             return False
-        return True
+        if request.session.get("role") != REQUIRED_ROLE:
+            return False
+        return bool(request.session.get("admin_user"))

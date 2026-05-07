@@ -21,6 +21,9 @@ async def fetch_jwks() -> None:
         response.raise_for_status()
         global _jwks
         data: dict[str, Any] = response.json()
+        keys = data.get("keys", [])
+        if not keys:
+            raise RuntimeError("JWKS endpoint returned no keys — refusing to start")
         _jwks = data
     logger.info("JWKS fetched successfully from %s", url)
 
@@ -54,7 +57,8 @@ async def verify_jwt(credentials: JwtCredentials) -> dict[str, Any]:
             token,
             public_key,
             algorithms=["RS256"],
-            options={"verify_aud": False},
+            audience=os.environ["CASDOOR_AUDIENCE"],
+            issuer=os.environ["CASDOOR_ISSUER"],
         )
     except JWTError as exc:
         logger.warning("JWT verification failed: %s", exc)

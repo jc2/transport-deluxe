@@ -56,7 +56,7 @@ router = APIRouter(tags=["Base Margin Configuration"])
 
 @router.post("", response_model=BaseMarginConfig, status_code=status.HTTP_201_CREATED)
 async def create_config(req: CreateRequest, session: AsyncSessionDep, jwt: VerifiedJwt) -> BaseMarginConfig:
-    created_by = jwt.get("preferred_username") or jwt.get("name", "api_user")
+    created_by = jwt.get("preferred_username") or jwt.get("name") or jwt["sub"]
     return await create_base_margin_config(session, req, created_by)
 
 
@@ -88,7 +88,7 @@ async def get_config(uuid: uuid_lib.UUID, session: AsyncSessionDep, jwt: Verifie
 async def update_config(
     uuid: uuid_lib.UUID, req: UpdateRequest, session: AsyncSessionDep, jwt: VerifiedJwt
 ) -> BaseMarginConfig:
-    created_by = jwt.get("preferred_username") or jwt.get("name", "api_user")
+    created_by = jwt.get("preferred_username") or jwt.get("name") or jwt["sub"]
     return await update_base_margin_config(session, uuid, req, created_by)
 
 
