@@ -23,6 +23,12 @@ test:
 clean:
 	docker compose -f docker-compose.yml -f docker-compose.test.yml --profile test down
 
+reset-casdoor:
+	docker-compose stop casdoor
+	docker-compose exec postgres psql -U postgres -c "DROP DATABASE IF EXISTS casdoor;"
+	docker-compose exec postgres psql -U postgres -c "CREATE DATABASE casdoor;"
+	docker-compose start casdoor
+
 # Truncate all audit/result tables in the engine schemas (costing, margin, pricing).
 # Config tables (fuel_cost_config, driver_tariff_config, etc.) are NOT affected.
 truncate-engines:

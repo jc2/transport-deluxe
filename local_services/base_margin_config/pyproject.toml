@@ -11,7 +11,6 @@ dependencies = [
     "sqlmodel>=0.0.21",
     "asyncpg>=0.29.0",
     "alembic>=1.13.0",
-    "python-jose[cryptography]>=3.3.0",
     "httpx>=0.27.0",
     "fastmcp>=2.3.1",
 ]

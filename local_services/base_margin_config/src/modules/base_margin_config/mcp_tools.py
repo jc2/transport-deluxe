@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated, Any, Optional
 
 from fastapi import HTTPException
+from fastmcp.server.dependencies import get_access_token  # type: ignore[import-not-found]
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.modules.base_margin_config.mcp_server import mcp
 from src.modules.base_margin_config.models import CreateRequest, Customer, ResolveRequest, Stop, UpdateRequest
@@ -87,14 +88,21 @@ async def set_base_margin_config(
             )
 
         try:
+            token = get_access_token()
+            current_user = (
+                (token.claims.get("preferred_username") or token.claims.get("name") or token.client_id)
+                if token
+                else "mcp-agent"
+            )
+
             if uuid_str:
                 uid = uuid.UUID(uuid_str)
                 req_update = UpdateRequest(customer=customer, pickup=pickup, drop=drop, margin_percent=margin_percent)
-                result_update = await update_base_margin_config(session, uid, req_update, created_by="mcp-agent")
+                result_update = await update_base_margin_config(session, uid, req_update, created_by=current_user)
                 return {"result": "Updated successfully", "config": result_update.model_dump(mode="json")}
 
             req_create = CreateRequest(customer=customer, pickup=pickup, drop=drop, margin_percent=margin_percent)
-            result_create = await create_base_margin_config(session, req_create, created_by="mcp-agent")
+            result_create = await create_base_margin_config(session, req_create, created_by=current_user)
             return {"result": "Created successfully", "config": result_create.model_dump(mode="json")}
         except ValueError as e:
             return {"error": str(e), "message": "Validation failed checking constraints."}

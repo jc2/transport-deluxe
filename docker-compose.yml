@@ -45,8 +45,6 @@ services:
       - driverName=postgres
       - dataSourceName=host=postgres user=postgres password=postgres dbname=casdoor port=5432 sslmode=disable
       - origin=http://localhost:8000
-    volumes:
-      - ./external_services/casdoor/init_data.json:/init_data.json
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8000/.well-known/jwks || exit 1"]
       interval: 10s
@@ -99,8 +97,11 @@ services:
       DB_SCHEMA: base_margin_config
       CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
       CASDOOR_ISSUER: http://localhost:8000
+      CASDOOR_INTERNAL_URL: http://casdoor:8000
       CASDOOR_AUDIENCE: ${CASDOOR_AUDIENCE}
+      CASDOOR_CLIENT_ID: transport-deluxe-client
       CASDOOR_CLIENT_SECRET: ${CASDOOR_CLIENT_SECRET}
+      SERVICE_BASE_URL: http://localhost:8003
       SESSION_SECRET: ${BASE_MARGIN_SESSION_SECRET}
 
   lead-time-config:

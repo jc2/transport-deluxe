@@ -14,7 +14,6 @@ from src.modules.base_margin_config.admin import BaseMarginConfigAdmin
 from src.modules.base_margin_config.mcp_server import mcp
 from src.modules.base_margin_config.router import router
 from src.tools.admin_auth import AdminAuth
-from src.tools.auth import fetch_jwks
 from src.tools.db import engine
 
 logging.basicConfig(
@@ -39,11 +38,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         raise RuntimeError(f"Migration failed: {result.stderr}")
     logger.info("Alembic migrations applied")
 
-    await fetch_jwks()
     yield
 
 
-mcp_app = mcp.http_app(path="/", transport="streamable-http")
+mcp_app = mcp.http_app(path="/mcp", transport="streamable-http")
 
 app = FastAPI(title="Base Margin Configuration Service", lifespan=combine_lifespans(lifespan, mcp_app.lifespan))
 
@@ -84,4 +82,4 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 
 
 app.include_router(router, prefix="/base-margin-configs")
-app.mount("/mcp", mcp_app)
+app.mount("/", mcp_app)
