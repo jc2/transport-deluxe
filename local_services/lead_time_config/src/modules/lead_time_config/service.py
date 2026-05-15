@@ -1,231 +1,113 @@
 import logging
 import uuid as uuid_lib
 
-from fastapi import HTTPException
-from sqlalchemy import func, text
-from sqlalchemy.exc import IntegrityError
-from sqlmodel import col, select
-from sqlmodel.ext.asyncio.session import AsyncSession
-
-from src.modules.lead_time_config.models import (
-    CreateRequest,
-    LeadTimeConfig,
-    LeadTimeConfigResponse,
-    PaginatedResponse,
-    ResolveRequest,
-    UpdateRequest,
-)
+from . import repo
+from .exceptions import ConfigNotFoundError, InvalidConfigError, OverlappingConfigError
+from .models import CreateRequest, LeadTimeConfig, LeadTimeConfigResponse, ResolveRequest, UpdateRequest
 
 logger = logging.getLogger(__name__)
 
 
-async def list_configs(
-    session: AsyncSession,
-    uuid: uuid_lib.UUID | None,
-    page: int,
-    page_size: int,
-) -> PaginatedResponse[LeadTimeConfigResponse]:
-    stmt = select(LeadTimeConfig)
-
-    if uuid is None:
-        # Get only the latest version for each uuid using DISTINCT ON
-        stmt = stmt.distinct(col(LeadTimeConfig.uuid)).order_by(
-            col(LeadTimeConfig.uuid), col(LeadTimeConfig.version).desc()
-        )
-    else:
-        stmt = stmt.where(LeadTimeConfig.uuid == uuid).order_by(col(LeadTimeConfig.version).asc())
-
-    count_stmt = select(func.count()).select_from(stmt.subquery())
-    total_result = await session.exec(count_stmt)
-    total = total_result.one()
-
-    stmt = stmt.offset((page - 1) * page_size).limit(page_size)
-    result = await session.exec(stmt)
-    rows = result.all()
-
-    total_pages = max(1, (total + page_size - 1) // page_size)
-
-    logger.info("list_configs returned %d items (page=%d)", len(rows), page)
-    return PaginatedResponse(
-        data=[LeadTimeConfigResponse.from_orm_row(r) for r in rows],
-        page=page,
-        page_size=page_size,
-        total=total,
-        total_pages=total_pages,
-    )
+async def list_lead_time_configs(
+    min_days: int | None = None,
+    max_days: int | None = None,
+) -> list[LeadTimeConfigResponse]:
+    records = await repo.list_configs(min_days=min_days, max_days=max_days)
+    return [LeadTimeConfigResponse.from_dao(r) for r in records]
 
 
-async def get_config(
-    session: AsyncSession,
-    uuid: uuid_lib.UUID,
-) -> LeadTimeConfigResponse:
-    stmt = (
-        select(LeadTimeConfig).where(LeadTimeConfig.uuid == uuid).order_by(col(LeadTimeConfig.version).desc()).limit(1)
-    )
-    result = await session.exec(stmt)
-    row = result.first()
-    if row is None:
-        raise HTTPException(
-            status_code=404,
-            detail={
-                "status": 404,
-                "messages": ["No active configuration found for this UUID"],
-            },
-        )
-    logger.info("get_config found uuid=%s version=%s", uuid, row.version)
-    return LeadTimeConfigResponse.from_orm_row(row)
+async def get_lead_time_config(uuid_val: uuid_lib.UUID) -> LeadTimeConfigResponse:
+    record = await repo.get_config(uuid_val)
+    logger.info("get_lead_time_config found uuid=%s version=%s", uuid_val, record.version)
+    return LeadTimeConfigResponse.from_dao(record)
 
 
-async def create_config(
-    session: AsyncSession,
-    request: CreateRequest,
+async def create_lead_time_config(
+    req: CreateRequest,
     created_by: str,
 ) -> LeadTimeConfigResponse:
-    # Verify no overlapping active configurations exist
-    # A overlaps B iff (A_min <= B_max) AND (A_max >= B_min)
-    # Using COALESCE to handle NULL as infinity
-    stmt = text("""
-        SELECT COUNT(*)
-        FROM (
-            SELECT DISTINCT ON (uuid) *
-            FROM lead_time_config
-            ORDER BY uuid, version DESC
-        ) AS latest_configs
-        WHERE (:min_days <= COALESCE(max_days, 2147483647))
-          AND (COALESCE(:max_days, 2147483647) >= min_days)
-    """)
-    result = await session.exec(stmt.bindparams(min_days=request.min_days, max_days=request.max_days))  # type: ignore[call-overload]
-    if result.first()[0] > 0:
-        raise HTTPException(
-            status_code=409,
-            detail={
-                "status": 409,
-                "messages": ["An active configuration already exists that overlaps with this min/max range"],
-            },
-        )
+    if await repo.check_overlap(min_days=req.min_days, max_days=req.max_days):
+        raise OverlappingConfigError("An active configuration already exists that overlaps with this min/max range")
 
-    new_uuid = uuid_lib.uuid4()
-    row = LeadTimeConfig(
-        uuid=new_uuid,
+    dao = LeadTimeConfig(
+        uuid=uuid_lib.uuid4(),
         version=1,
-        min_days=request.min_days,
-        max_days=request.max_days,
-        configuration_factor=request.configuration_factor,
+        min_days=req.min_days,
+        max_days=req.max_days,
+        configuration_factor=req.configuration_factor,
         created_by=created_by,
     )
-    session.add(row)
-    try:
-        await session.commit()
-    except IntegrityError:
-        await session.rollback()
-        raise HTTPException(
-            status_code=409,
-            detail={
-                "status": 409,
-                "messages": ["An active configuration already exists for this combination"],
-            },
-        )
-    await session.refresh(row)
-
+    saved = await repo.save_config(dao)
     logger.info(
-        "create_config created uuid=%s rule=[%s, %s] created_by=%s",
-        new_uuid,
-        request.min_days,
-        request.max_days,
+        "create_lead_time_config created uuid=%s rule=[%s, %s] created_by=%s",
+        saved.uuid,
+        req.min_days,
+        req.max_days,
         created_by,
     )
-    return LeadTimeConfigResponse.from_orm_row(row)
+    return LeadTimeConfigResponse.from_dao(saved)
 
 
-async def update_config(
-    session: AsyncSession,
-    uuid: uuid_lib.UUID,
-    request: UpdateRequest,
+async def update_lead_time_config(
+    uuid_val: uuid_lib.UUID,
+    req: UpdateRequest,
     created_by: str,
 ) -> LeadTimeConfigResponse:
-    stmt = (
-        select(LeadTimeConfig)
-        .where(LeadTimeConfig.uuid == uuid)
-        .order_by(col(LeadTimeConfig.version).desc())
-        .limit(1)
-        .with_for_update()
+    current = await repo.get_config(uuid_val)
+
+    new_min_days: int = (
+        req.min_days if ("min_days" in req.model_fields_set and req.min_days is not None) else current.min_days
     )
-    result = await session.exec(stmt)
-    current = result.first()
-    if current is None:
-        raise HTTPException(
-            status_code=404,
-            detail={
-                "status": 404,
-                "messages": ["No active configuration found for this UUID"],
-            },
-        )
+    new_max_days = req.max_days if "max_days" in req.model_fields_set else current.max_days
+    new_configuration_factor = (
+        req.configuration_factor if "configuration_factor" in req.model_fields_set else current.configuration_factor
+    )
+
+    if new_max_days is not None and new_min_days > new_max_days:
+        raise InvalidConfigError("min_days cannot be greater than max_days")
+
+    if new_min_days != current.min_days or new_max_days != current.max_days:
+        if await repo.check_overlap(min_days=new_min_days, max_days=new_max_days, exclude_uuid=uuid_val):
+            raise OverlappingConfigError("An active configuration already exists that overlaps with this min/max range")
 
     new_version = current.version + 1
-    new_row = LeadTimeConfig(
-        uuid=uuid,
+    dao = LeadTimeConfig(
+        uuid=uuid_val,
         version=new_version,
-        min_days=current.min_days,
-        max_days=current.max_days,
-        configuration_factor=request.configuration_factor,
+        min_days=new_min_days,
+        max_days=new_max_days,
+        configuration_factor=new_configuration_factor,
         created_by=created_by,
     )
-    session.add(new_row)
-    await session.commit()
-    await session.refresh(new_row)
+    saved = await repo.save_config(dao)
 
     logger.info(
-        "update_config uuid=%s new_version=%s created_by=%s",
-        uuid,
+        "update_lead_time_config uuid=%s new_version=%s created_by=%s",
+        uuid_val,
         new_version,
         created_by,
     )
-    return LeadTimeConfigResponse.from_orm_row(new_row)
+    return LeadTimeConfigResponse.from_dao(saved)
 
 
-async def resolve_config(
-    session: AsyncSession,
-    request: ResolveRequest,
-) -> LeadTimeConfigResponse:
-    days = request.days_to_shipment
+async def delete_lead_time_config(uuid_val: uuid_lib.UUID) -> None:
+    await repo.delete_config(uuid_val)
 
-    stmt = text("""
-        SELECT uuid, version, min_days, max_days, configuration_factor, created_by, created_at
-        FROM (
-            SELECT DISTINCT ON (uuid) *
-            FROM lead_time_config
-            ORDER BY uuid, version DESC
-        ) AS latest_configs
-        WHERE min_days <= :days
-          AND (max_days IS NULL OR max_days >= :days)
-        ORDER BY version DESC
-        LIMIT 1
-    """)
 
-    result = await session.exec(stmt.bindparams(days=days))  # type: ignore[call-overload]
-    row = result.first()
+async def resolve_lead_time_config(req: ResolveRequest) -> LeadTimeConfigResponse:
+    days = req.days_to_shipment
+    active_configs = await repo.get_all_active_configs()
 
-    if row is None:
-        logger.warning(
-            "resolve_config found no match for days_to_shipment=%s",
-            days,
-        )
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "status": 400,
-                "messages": ["No active lead time configuration found for the given shipment date"],
-            },
-        )
+    match = None
+    for config in active_configs:
+        max_days = config.max_days if config.max_days is not None else float("inf")
+        if config.min_days <= days <= max_days:
+            match = config
+            break
 
-    config = LeadTimeConfig(
-        uuid=row.uuid,
-        version=row.version,
-        min_days=row.min_days,
-        max_days=row.max_days,
-        configuration_factor=row.configuration_factor,
-        created_by=row.created_by,
-        created_at=row.created_at,
-    )
-    logger.info("resolve_config matched uuid=%s version=%s for days=%s", config.uuid, config.version, days)
-    return LeadTimeConfigResponse.from_orm_row(config)
+    if not match:
+        logger.warning("resolve_lead_time_config found no match for days_to_shipment=%s", days)
+        raise ConfigNotFoundError(f"No active lead time configuration found for {days} days to shipment.")
+
+    logger.info("resolve_lead_time_config matched uuid=%s version=%s for days=%s", match.uuid, match.version, days)
+    return LeadTimeConfigResponse.from_dao(match)

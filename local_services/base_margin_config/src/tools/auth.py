@@ -4,8 +4,8 @@ from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from fastmcp.server.auth import OAuthProxy  # type: ignore[import-not-found]
-from fastmcp.server.auth.providers.jwt import JWTVerifier  # type: ignore[import-not-found]
+from fastmcp.server.auth import OAuthProxy
+from fastmcp.server.auth.providers.jwt import JWTVerifier
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ def _has_required_role(roles_claim: list[Any]) -> bool:
     return _REQUIRED_ROLE in role_names
 
 
-class CasdoorJWTVerifier(JWTVerifier):  # type: ignore[misc]
+class CasdoorJWTVerifier(JWTVerifier):
     """JWTVerifier extended to support Casdoor's role-based authorization.
 
     Casdoor encodes roles as a list of objects (e.g. [{"name": "margin-configurator", ...}])

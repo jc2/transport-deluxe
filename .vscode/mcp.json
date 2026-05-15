@@ -2,6 +2,9 @@
   "servers": {
     "base_margin_config": {
       "url": "http://localhost:8003/mcp"
+    },
+    "lead_time_config": {
+      "url": "http://localhost:8004/mcp"
     }
   }
 }

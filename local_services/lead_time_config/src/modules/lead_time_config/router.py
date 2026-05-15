@@ -1,99 +1,75 @@
 import logging
 import uuid as uuid_lib
+from collections.abc import Sequence
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
-from sqlmodel.ext.asyncio.session import AsyncSession
+from fastapi import APIRouter, Depends, Query, status
 
-from src.modules.lead_time_config import service
 from src.modules.lead_time_config.models import (
     CreateRequest,
     LeadTimeConfigResponse,
-    PaginatedResponse,
     ResolveRequest,
     UpdateRequest,
 )
-from src.tools.auth import require_role
-from src.tools.db import get_session
+from src.modules.lead_time_config.service import (
+    create_lead_time_config,
+    delete_lead_time_config,
+    get_lead_time_config,
+    list_lead_time_configs,
+    resolve_lead_time_config,
+    update_lead_time_config,
+)
+from src.tools.auth import VerifiedJwt
 
 logger = logging.getLogger(__name__)
+
+
+class ListFilterParams:
+    def __init__(
+        self,
+        min_days: int | None = Query(None),
+        max_days: int | None = Query(None),
+    ):
+        self.min_days = min_days
+        self.max_days = max_days
+
+
 router = APIRouter(tags=["Lead Time Configuration"])
 
 
-@router.get(
-    "/",
-    response_model=PaginatedResponse[LeadTimeConfigResponse],
-)
+@router.post("", response_model=LeadTimeConfigResponse, status_code=status.HTTP_201_CREATED)
+async def create_config(req: CreateRequest, jwt: VerifiedJwt) -> LeadTimeConfigResponse:
+    created_by = jwt.get("preferred_username") or jwt.get("name") or jwt["sub"]
+    return await create_lead_time_config(req, created_by)
+
+
+@router.get("", response_model=list[LeadTimeConfigResponse])
 async def list_configs(
-    session: Annotated[AsyncSession, Depends(get_session)],
-    uuid: uuid_lib.UUID | None = Query(None, description="Filter by configuration UUID"),
-    page: int = Query(1, ge=1, description="Page number"),
-    page_size: int = Query(10, ge=1, le=100, description="Items per page"),
-    user_info: dict = Depends(require_role("margin-configurator")),  # type: ignore[type-arg]
-) -> PaginatedResponse[LeadTimeConfigResponse]:
-    return await service.list_configs(
-        session=session,
-        uuid=uuid,
-        page=page,
-        page_size=page_size,
+    jwt: VerifiedJwt, filters: Annotated[ListFilterParams, Depends()]
+) -> Sequence[LeadTimeConfigResponse]:
+    return await list_lead_time_configs(
+        min_days=filters.min_days,
+        max_days=filters.max_days,
     )
 
 
-@router.get(
-    "/{uuid}",
-    response_model=LeadTimeConfigResponse,
-)
-async def get_config(
-    uuid: uuid_lib.UUID,
-    session: Annotated[AsyncSession, Depends(get_session)],
-    user_info: dict = Depends(require_role("margin-configurator")),  # type: ignore[type-arg]
-) -> LeadTimeConfigResponse:
-    return await service.get_config(session=session, uuid=uuid)
+@router.get("/{uuid}", response_model=LeadTimeConfigResponse)
+async def get_config(uuid: uuid_lib.UUID, jwt: VerifiedJwt) -> LeadTimeConfigResponse:
+    return await get_lead_time_config(uuid)
 
 
-@router.post(
-    "/",
-    response_model=LeadTimeConfigResponse,
-    status_code=201,
-)
-async def create_config(
-    request: CreateRequest,
-    session: Annotated[AsyncSession, Depends(get_session)],
-    user_info: dict = Depends(require_role("margin-configurator")),  # type: ignore[type-arg]
-) -> LeadTimeConfigResponse:
-    created_by = user_info.get("preferred_username", "unknown")
-    return await service.create_config(
-        session=session,
-        request=request,
-        created_by=created_by,
-    )
+@router.put("/{uuid}", response_model=LeadTimeConfigResponse)
+async def update_config(uuid: uuid_lib.UUID, req: UpdateRequest, jwt: VerifiedJwt) -> LeadTimeConfigResponse:
+    created_by = jwt.get("preferred_username") or jwt.get("name") or jwt["sub"]
+    return await update_lead_time_config(uuid, req, created_by)
 
 
-@router.patch(
-    "/{uuid}",
-    response_model=LeadTimeConfigResponse,
-)
-async def update_config(
-    uuid: uuid_lib.UUID,
-    request: UpdateRequest,
-    session: Annotated[AsyncSession, Depends(get_session)],
-    user_info: dict = Depends(require_role("margin-configurator")),  # type: ignore[type-arg]
-) -> LeadTimeConfigResponse:
-    created_by = user_info.get("preferred_username", "unknown")
-    return await service.update_config(
-        session=session,
-        uuid=uuid,
-        request=request,
-        created_by=created_by,
-    )
+@router.delete("/{uuid}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_config(uuid: uuid_lib.UUID, jwt: VerifiedJwt) -> None:
+    await delete_lead_time_config(uuid)
 
 
-@router.post(
-    "/resolve",
-    response_model=LeadTimeConfigResponse,
-)
-async def resolve_config(
-    request: ResolveRequest,
-    session: Annotated[AsyncSession, Depends(get_session)],
-) -> LeadTimeConfigResponse:
-    return await service.resolve_config(session=session, request=request)
+@router.post("/resolve", response_model=LeadTimeConfigResponse)
+async def resolve_config(req: ResolveRequest) -> LeadTimeConfigResponse:
+    match = await resolve_lead_time_config(req)
+    return match

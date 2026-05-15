@@ -77,6 +77,7 @@ async def client(test_db):
 @pytest_asyncio.fixture(scope="function")
 async def mcp_client(test_db, clean_table):
     from fastmcp import Client
+    from src.modules.base_margin_config import mcp_tools as _  # noqa: F401 — registers tools on mcp
     from src.modules.base_margin_config import repo as repo_module
     from src.modules.base_margin_config.mcp_server import mcp
     from src.tools import db as db_module

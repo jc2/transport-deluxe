@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated, Any, Optional
 
-from fastmcp.server.dependencies import get_access_token  # type: ignore[import-not-found]
+from fastmcp.server.dependencies import get_access_token
 from src.modules.base_margin_config.exceptions import ConfigNotFoundError, DuplicateConfigError
 from src.modules.base_margin_config.mcp_server import mcp
 from src.modules.base_margin_config.models import CreateRequest, Customer, ResolveRequest, Stop, UpdateRequest
@@ -23,7 +23,7 @@ def _current_user() -> str:
     return "mcp-agent"
 
 
-@mcp.tool(annotations={"idempotentHint": True})  # type: ignore
+@mcp.tool(annotations={"idempotentHint": True})
 async def set_base_margin_config(
     margin_percent: Annotated[
         float,
@@ -111,7 +111,7 @@ async def set_base_margin_config(
         return {"error": str(e)}
 
 
-@mcp.tool(annotations={"destructiveHint": True})  # type: ignore
+@mcp.tool(annotations={"destructiveHint": True})
 async def delete_base_margin_config_tool(
     uuid_str: Annotated[str, "The UUID of the configuration to delete."],
 ) -> dict[str, Any]:
@@ -125,7 +125,7 @@ async def delete_base_margin_config_tool(
         return {"error": "Invalid UUID format"}
 
 
-@mcp.tool(annotations={"readOnlyHint": True})  # type: ignore
+@mcp.tool(annotations={"readOnlyHint": True})
 async def resolve_applicable_margin(
     customer_name: Annotated[
         str, "REQUIRED. Exact customer name. If the load has no customer assigned, pass an empty string ''."
@@ -172,7 +172,7 @@ async def resolve_applicable_margin(
         return {"match_found": False, "message": "No matching margin configuration found."}
 
 
-@mcp.tool(annotations={"readOnlyHint": True})  # type: ignore
+@mcp.tool(annotations={"readOnlyHint": True})
 async def get_all_configs_tool(
     customer_name: Annotated[Optional[str], "Filter by exact customer name"] = None,
     customer_subname: Annotated[Optional[str], "Filter by customer sub-account"] = None,
@@ -204,7 +204,7 @@ async def get_all_configs_tool(
     return [c.model_dump(mode="json") for c in configs]
 
 
-@mcp.tool(annotations={"readOnlyHint": True})  # type: ignore
+@mcp.tool(annotations={"readOnlyHint": True})
 async def get_config_tool(
     uuid_str: Annotated[str, "The unique UUID of the base margin configuration record to retrieve"],
 ) -> dict[str, Any]:

@@ -28,25 +28,25 @@ repos:
         files: ^local_services/base_margin_config/
         exclude: ^local_services/base_margin_config/tests/
         args: [--config-file=pyproject.toml]
-        additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest"]
+        additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest", "fastmcp", "sqladmin"]
       - id: mypy
         name: mypy (driver-tariff)
         files: ^local_services/driver_tariff_config/
         exclude: ^local_services/driver_tariff_config/tests/
         args: [--config-file=pyproject.toml]
-        additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest"]
+        additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest", "fastmcp", "sqladmin"]
       - id: mypy
         name: mypy (fuel-cost)
         files: ^local_services/fuel_cost_config/
         exclude: ^local_services/fuel_cost_config/tests/
         args: [--config-file=pyproject.toml]
-        additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest"]
+        additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest", "fastmcp", "sqladmin"]
       - id: mypy
         name: mypy (lead-time)
         files: ^local_services/lead_time_config/
         exclude: ^local_services/lead_time_config/tests/
         args: [--config-file=pyproject.toml]
-        additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest"]
+        additional_dependencies: ["pydantic", "sqlmodel", "sqlalchemy", "fastapi", "httpx", "types-python-jose", "pytest", "fastmcp", "sqladmin"]
       - id: mypy
         name: mypy (costing-engine)
         files: ^local_services/costing_engine/

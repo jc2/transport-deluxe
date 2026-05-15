@@ -8,7 +8,7 @@ async def test_get_config_success(client: AsyncClient, clean_table, auth_token: 
     payload = {"min_days": 2, "max_days": 5, "configuration_factor": "0.15"}
 
     create_resp = await client.post(
-        "/lead-time-configs/", json=payload, headers={"Authorization": f"Bearer {auth_token}"}
+        "/lead-time-configs", json=payload, headers={"Authorization": f"Bearer {auth_token}"}
     )
 
     assert create_resp.status_code == 201
@@ -36,4 +36,4 @@ async def test_get_config_not_found(client: AsyncClient, clean_table, auth_token
     get_resp = await client.get(f"/lead-time-configs/{random_uuid}", headers={"Authorization": f"Bearer {auth_token}"})
 
     assert get_resp.status_code == 404
-    assert get_resp.json()["messages"] == ["No active configuration found for this UUID"]
+    assert get_resp.json()["messages"] == [f"Configuration {random_uuid} not found."]

@@ -38,7 +38,7 @@ async def test_resolve_config_success(client: AsyncClient, clean_table, auth_tok
         {"min_days": 6, "max_days": None, "configuration_factor": "0.00"},  # Standard (6+)
     ]
     for cfg in configs:
-        resp = await client.post("/lead-time-configs/", json=cfg, headers={"Authorization": f"Bearer {auth_token}"})
+        resp = await client.post("/lead-time-configs", json=cfg, headers={"Authorization": f"Bearer {auth_token}"})
         assert resp.status_code == 201
 
     # 2. Test resolutions
@@ -85,10 +85,10 @@ async def test_resolve_config_no_match(client: AsyncClient, clean_table, auth_to
 
     # Just create a rule for 5-10
     cfg = {"min_days": 5, "max_days": 10, "configuration_factor": "0.10"}
-    resp = await client.post("/lead-time-configs/", json=cfg, headers={"Authorization": f"Bearer {auth_token}"})
+    resp = await client.post("/lead-time-configs", json=cfg, headers={"Authorization": f"Bearer {auth_token}"})
     assert resp.status_code == 201
 
     # Request for 2 days
     resolve_resp = await client.post("/lead-time-configs/resolve", json={"days_to_shipment": 2})
-    assert resolve_resp.status_code == 400
+    assert resolve_resp.status_code == 404
     assert "No active lead time configuration found" in resolve_resp.json()["messages"][0]
