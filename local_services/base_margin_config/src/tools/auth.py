@@ -43,6 +43,25 @@ class CasdoorJWTVerifier(JWTVerifier):  # type: ignore[misc]
         return access_token
 
 
+# ---------------------------------------------------------------------------
+# REST API JWT verifier — validates raw Casdoor JWTs (not proxy-issued tokens)
+# ---------------------------------------------------------------------------
+
+_rest_verifier: JWTVerifier | None = None
+
+
+def _get_rest_verifier() -> JWTVerifier:
+    """Singleton JWTVerifier for REST API token validation."""
+    global _rest_verifier
+    if _rest_verifier is None:
+        _rest_verifier = JWTVerifier(
+            jwks_uri=os.environ["CASDOOR_JWKS_URL"],
+            issuer=os.environ["CASDOOR_ISSUER"],
+            audience=os.environ.get("CASDOOR_AUDIENCE"),
+        )
+    return _rest_verifier
+
+
 _proxy: OAuthProxy | None = None
 
 
@@ -91,14 +110,20 @@ JwtCredentials = Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_s
 
 async def verify_jwt(credentials: JwtCredentials) -> dict[str, Any]:
     if credentials is None:
-        raise HTTPException(status_code=401, detail={"status": 401, "messages": ["Missing Authorization header"]})
+        raise HTTPException(status_code=401, detail={"messages": ["Missing Authorization header"]})
 
-    proxy = get_mcp_auth()
-    access_token = await proxy.verify_token(credentials.credentials)
+    access_token = await _get_rest_verifier().verify_token(credentials.credentials)
     if access_token is None:
         raise HTTPException(
             status_code=401,
-            detail={"status": 401, "messages": ["Invalid or expired token"]},
+            detail={"messages": ["Invalid or expired token"]},
+        )
+
+    roles: list[Any] = access_token.claims.get("roles") or []
+    if not _has_required_role(roles):
+        raise HTTPException(
+            status_code=403,
+            detail={"messages": [f"Missing required role: {_REQUIRED_ROLE}"]},
         )
 
     return dict(access_token.claims)

@@ -26,7 +26,7 @@ async def test_list_configs(client, auth_token, clean_table):
     assert resp.status_code == 200
     data = resp.json()
     assert len(data) == 1
-    assert data[0]["customer_name"] == "A"
+    assert data[0]["customer"]["name"] == "A"
 
     # Test filter by pickup_country
     resp = await client.get("/base-margin-configs?pickup_country=US", headers=headers)
@@ -38,7 +38,7 @@ async def test_list_configs(client, auth_token, clean_table):
     assert resp.status_code == 200
     data = resp.json()
     assert len(data) == 1
-    assert data[0]["customer_name"] == "B"
+    assert data[0]["customer"]["name"] == "B"
 
     # Test filter by drop_country
     resp = await client.get("/base-margin-configs?drop_country=MX", headers=headers)

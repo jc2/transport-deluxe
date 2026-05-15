@@ -15,9 +15,9 @@ async def test_create_success(client, auth_token, clean_table):
     )
     assert response.status_code == 201
     data = response.json()
-    assert data["customer_name"] == "Acme"
-    assert data["customer_subname"] is None
-    assert data["pickup_country"] == "US"
+    assert data["customer"]["name"] == "Acme"
+    assert data["customer"]["subname"] is None
+    assert data["pickup"]["country"] == "US"
     assert data["margin_percent"] == 0.15
 
 

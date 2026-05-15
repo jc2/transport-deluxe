@@ -1,9 +1,8 @@
 import uuid
 from typing import Annotated, Any, Optional
 
-from fastapi import HTTPException
 from fastmcp.server.dependencies import get_access_token  # type: ignore[import-not-found]
-from sqlmodel.ext.asyncio.session import AsyncSession
+from src.modules.base_margin_config.exceptions import ConfigNotFoundError, DuplicateConfigError
 from src.modules.base_margin_config.mcp_server import mcp
 from src.modules.base_margin_config.models import CreateRequest, Customer, ResolveRequest, Stop, UpdateRequest
 from src.modules.base_margin_config.service import (
@@ -14,7 +13,14 @@ from src.modules.base_margin_config.service import (
     resolve_base_margin_config,
     update_base_margin_config,
 )
-from src.tools.db import engine
+
+
+def _current_user() -> str:
+    token = get_access_token()
+    if token:
+        username: str = token.claims.get("preferred_username") or token.claims.get("name") or token.client_id
+        return username
+    return "mcp-agent"
 
 
 @mcp.tool(annotations={"idempotentHint": True})  # type: ignore
@@ -64,52 +70,45 @@ async def set_base_margin_config(
     If 'uuid_str' is provided, the existing rule will be updated with the new parameters.
     If 'uuid_str' is omitted, a new rule will be created.
     """
-    async with AsyncSession(engine, expire_on_commit=False) as session:
-        customer = None
-        if customer_name or customer_subname:
-            customer = Customer(name=customer_name or "", subname=customer_subname)
+    customer = None
+    if customer_name or customer_subname:
+        customer = Customer(name=customer_name or "", subname=customer_subname)
 
-        pickup = None
-        if pickup_country or pickup_state or pickup_city or pickup_postal_code:
-            pickup = Stop(
-                country=pickup_country or "",
-                state=pickup_state or "",
-                city=pickup_city or "",
-                postal_code=pickup_postal_code or "",
-            )
+    pickup = None
+    if pickup_country or pickup_state or pickup_city or pickup_postal_code:
+        pickup = Stop(
+            country=pickup_country or "",
+            state=pickup_state or "",
+            city=pickup_city or "",
+            postal_code=pickup_postal_code or "",
+        )
 
-        drop = None
-        if drop_country or drop_state or drop_city or drop_postal_code:
-            drop = Stop(
-                country=drop_country or "",
-                state=drop_state or "",
-                city=drop_city or "",
-                postal_code=drop_postal_code or "",
-            )
+    drop = None
+    if drop_country or drop_state or drop_city or drop_postal_code:
+        drop = Stop(
+            country=drop_country or "",
+            state=drop_state or "",
+            city=drop_city or "",
+            postal_code=drop_postal_code or "",
+        )
 
-        try:
-            token = get_access_token()
-            current_user = (
-                (token.claims.get("preferred_username") or token.claims.get("name") or token.client_id)
-                if token
-                else "mcp-agent"
-            )
+    try:
+        current_user = _current_user()
+        if uuid_str:
+            uid = uuid.UUID(uuid_str)
+            req_update = UpdateRequest(customer=customer, pickup=pickup, drop=drop, margin_percent=margin_percent)
+            result = await update_base_margin_config(uid, req_update, created_by=current_user)
+            return {"result": "Updated successfully", "config": result.model_dump(mode="json")}
 
-            if uuid_str:
-                uid = uuid.UUID(uuid_str)
-                req_update = UpdateRequest(customer=customer, pickup=pickup, drop=drop, margin_percent=margin_percent)
-                result_update = await update_base_margin_config(session, uid, req_update, created_by=current_user)
-                return {"result": "Updated successfully", "config": result_update.model_dump(mode="json")}
-
-            req_create = CreateRequest(customer=customer, pickup=pickup, drop=drop, margin_percent=margin_percent)
-            result_create = await create_base_margin_config(session, req_create, created_by=current_user)
-            return {"result": "Created successfully", "config": result_create.model_dump(mode="json")}
-        except ValueError as e:
-            return {"error": str(e), "message": "Validation failed checking constraints."}
-        except HTTPException as e:
-            return {"error": e.detail, "status_code": e.status_code}
-        except Exception as e:
-            return {"error": str(e)}
+        req_create = CreateRequest(customer=customer, pickup=pickup, drop=drop, margin_percent=margin_percent)
+        result = await create_base_margin_config(req_create, created_by=current_user)
+        return {"result": "Created successfully", "config": result.model_dump(mode="json")}
+    except (ConfigNotFoundError, DuplicateConfigError) as e:
+        return {"error": str(e)}
+    except ValueError as e:
+        return {"error": str(e), "message": "Validation failed checking constraints."}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @mcp.tool(annotations={"destructiveHint": True})  # type: ignore
@@ -117,14 +116,13 @@ async def delete_base_margin_config_tool(
     uuid_str: Annotated[str, "The UUID of the configuration to delete."],
 ) -> dict[str, Any]:
     """Permanently delete a base margin configuration. This action cannot be undone."""
-    async with AsyncSession(engine, expire_on_commit=False) as session:
-        try:
-            await delete_base_margin_config(session, uuid.UUID(uuid_str))
-            return {"result": f"Configuration {uuid_str} deleted successfully"}
-        except HTTPException as e:
-            return {"error": e.detail, "status_code": e.status_code}
-        except ValueError:
-            return {"error": "Invalid UUID format"}
+    try:
+        await delete_base_margin_config(uuid.UUID(uuid_str))
+        return {"result": f"Configuration {uuid_str} deleted successfully"}
+    except ConfigNotFoundError as e:
+        return {"error": str(e)}
+    except ValueError:
+        return {"error": "Invalid UUID format"}
 
 
 @mcp.tool(annotations={"readOnlyHint": True})  # type: ignore
@@ -152,27 +150,26 @@ async def resolve_applicable_margin(
     Do NOT omit parameters if the load has them; the underlying engine uses a priority weight system based
     on all these data points to find the most accurate margin match.
     """
-    async with AsyncSession(engine, expire_on_commit=False) as session:
-        # A real load evaluation must construct Customer, Pickup Stop and Drop Stop
-        customer = Customer(name=customer_name, subname=customer_subname)
-        pickup = Stop(
-            country=pickup_country,
-            state=pickup_state,
-            city=pickup_city,
-            postal_code=pickup_postal_code or "",
-        )
-        drop = Stop(
-            country=drop_country,
-            state=drop_state,
-            city=drop_city,
-            postal_code=drop_postal_code or "",
-        )
+    customer = Customer(name=customer_name, subname=customer_subname)
+    pickup = Stop(
+        country=pickup_country,
+        state=pickup_state,
+        city=pickup_city,
+        postal_code=pickup_postal_code or "",
+    )
+    drop = Stop(
+        country=drop_country,
+        state=drop_state,
+        city=drop_city,
+        postal_code=drop_postal_code or "",
+    )
 
-        req = ResolveRequest(customer=customer, pickup=pickup, drop=drop)
-        result = await resolve_base_margin_config(session, req)
-        if result:
-            return {"match_found": True, "config": result.model_dump(mode="json")}
-        return {"match_found": False, "message": "No matching margin configuration found logic."}
+    req = ResolveRequest(customer=customer, pickup=pickup, drop=drop)
+    try:
+        result = await resolve_base_margin_config(req)
+        return {"match_found": True, "config": result.model_dump(mode="json")}
+    except ConfigNotFoundError:
+        return {"match_found": False, "message": "No matching margin configuration found."}
 
 
 @mcp.tool(annotations={"readOnlyHint": True})  # type: ignore
@@ -192,21 +189,19 @@ async def get_all_configs_tool(
 
     Returns the latest version of distinct configurations matching the applied filters.
     """
-    async with AsyncSession(engine, expire_on_commit=False) as session:
-        configs = await list_base_margin_configs(
-            session,
-            customer_name=customer_name,
-            customer_subname=customer_subname,
-            pickup_country=pickup_country,
-            pickup_state=pickup_state,
-            pickup_city=pickup_city,
-            pickup_postal_code=pickup_postal_code,
-            drop_country=drop_country,
-            drop_state=drop_state,
-            drop_city=drop_city,
-            drop_postal_code=drop_postal_code,
-        )
-        return [c.model_dump(mode="json") for c in configs]
+    configs = await list_base_margin_configs(
+        customer_name=customer_name,
+        customer_subname=customer_subname,
+        pickup_country=pickup_country,
+        pickup_state=pickup_state,
+        pickup_city=pickup_city,
+        pickup_postal_code=pickup_postal_code,
+        drop_country=drop_country,
+        drop_state=drop_state,
+        drop_city=drop_city,
+        drop_postal_code=drop_postal_code,
+    )
+    return [c.model_dump(mode="json") for c in configs]
 
 
 @mcp.tool(annotations={"readOnlyHint": True})  # type: ignore
@@ -216,13 +211,10 @@ async def get_config_tool(
     """Retrieve a single base margin configuration record identified by its UUID.
     Useful for inspecting the specifics of an existing rule version.
     """
-    async with AsyncSession(engine, expire_on_commit=False) as session:
-        try:
-            config = await get_base_margin_config(session, uuid.UUID(uuid_str))
-            if config:
-                return config.model_dump(mode="json")
-            return {}
-        except HTTPException as e:
-            return {"error": e.detail, "status_code": e.status_code}
-        except ValueError:
-            return {"error": "Invalid UUID format"}
+    try:
+        config = await get_base_margin_config(uuid.UUID(uuid_str))
+        return config.model_dump(mode="json")
+    except ConfigNotFoundError as e:
+        return {"error": str(e)}
+    except ValueError:
+        return {"error": "Invalid UUID format"}

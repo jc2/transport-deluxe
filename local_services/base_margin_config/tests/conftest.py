@@ -21,7 +21,7 @@ async def test_db():
     engine = create_async_engine(url, echo=False, poolclass=NullPool)
 
     from sqlmodel import SQLModel
-    from src.modules.base_margin_config.models import BaseMarginConfig  # noqa: F401
+    from src.modules.base_margin_config.models import BaseMarginConfig  # noqa: F401 (registers SQLModel table metadata)
 
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.drop_all)
@@ -63,13 +63,6 @@ async def auth_token():
         return data["access_token"]
 
 
-@pytest_asyncio.fixture(scope="session", autouse=True)
-async def load_jwks():
-    from src.tools.auth import fetch_jwks
-
-    await fetch_jwks()
-
-
 @pytest_asyncio.fixture(scope="function")
 async def client(test_db):
     from src.tools import db as db_module
@@ -83,11 +76,13 @@ async def client(test_db):
 
 @pytest_asyncio.fixture(scope="function")
 async def mcp_client(test_db, clean_table):
-    import src.modules.base_margin_config.mcp_tools as mcp_tools_module
     from fastmcp import Client
+    from src.modules.base_margin_config import repo as repo_module
     from src.modules.base_margin_config.mcp_server import mcp
+    from src.tools import db as db_module
 
-    mcp_tools_module.engine = test_db
+    db_module.engine = test_db
+    repo_module  # ensure module is imported so engine reference is live
 
     async with Client(mcp) as c:
         yield c
