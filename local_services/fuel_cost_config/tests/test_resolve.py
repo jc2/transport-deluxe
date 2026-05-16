@@ -105,9 +105,8 @@ async def test_resolve_system_fallback(client, auth_token, clean_table) -> None:
 @pytest.mark.asyncio
 async def test_resolve_400_when_no_match(client, clean_table) -> None:
     response = await client.post("/fuel-cost-configs/resolve", json={"customer": None, "truck_type": "Flatbed"})
-    assert response.status_code == 400
+    assert response.status_code == 404
     body = response.json()
-    assert body["status"] == 400
     assert "messages" in body
 
 

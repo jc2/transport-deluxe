@@ -2,10 +2,13 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_list_returns_active_configs_with_pagination(client, auth_token, clean_table) -> None:
+async def test_list_returns_active_configs(client, auth_token, clean_table) -> None:
     headers = {"Authorization": f"Bearer {auth_token}"}
-    payload = {"customer": None, "truck_type": "Dryvan", "fuel_cost_per_km": "0.50"}
-    await client.post("/fuel-cost-configs", json=payload, headers=headers)
+    await client.post(
+        "/fuel-cost-configs",
+        json={"customer": None, "truck_type": "Dryvan", "fuel_cost_per_km": "0.50"},
+        headers=headers,
+    )
     await client.post(
         "/fuel-cost-configs",
         json={"customer": None, "truck_type": "Reefer", "fuel_cost_per_km": "0.65"},
@@ -15,12 +18,8 @@ async def test_list_returns_active_configs_with_pagination(client, auth_token, c
     response = await client.get("/fuel-cost-configs", headers=headers)
     assert response.status_code == 200
     data = response.json()
-    assert "data" in data
-    assert "page" in data
-    assert "page_size" in data
-    assert "total" in data
-    assert "total_pages" in data
-    assert data["total"] >= 2
+    assert isinstance(data, list)
+    assert len(data) >= 2
 
 
 @pytest.mark.asyncio
@@ -40,7 +39,8 @@ async def test_list_filter_by_truck_type(client, auth_token, clean_table) -> Non
     response = await client.get("/fuel-cost-configs?truck_type=Reefer", headers=headers)
     assert response.status_code == 200
     data = response.json()
-    assert all(item["truck_type"] == "Reefer" for item in data["data"])
+    assert isinstance(data, list)
+    assert all(item["truck_type"] == "Reefer" for item in data)
 
 
 @pytest.mark.asyncio
@@ -64,12 +64,13 @@ async def test_list_filter_by_customer_name(client, auth_token, clean_table) -> 
     response = await client.get("/fuel-cost-configs?customer_name=Acme", headers=headers)
     assert response.status_code == 200
     data = response.json()
-    assert len(data["data"]) >= 1
-    assert all(item["customer"]["name"] == "Acme" for item in data["data"])
+    assert isinstance(data, list)
+    assert len(data) >= 1
+    assert all(item["customer"]["name"] == "Acme" for item in data)
 
 
 @pytest.mark.asyncio
-async def test_list_include_inactive_with_uuid_returns_history_version_asc(client, auth_token, clean_table) -> None:
+async def test_list_returns_latest_version_per_uuid(client, auth_token, clean_table) -> None:
     headers = {"Authorization": f"Bearer {auth_token}"}
     create_resp = await client.post(
         "/fuel-cost-configs",
@@ -85,12 +86,13 @@ async def test_list_include_inactive_with_uuid_returns_history_version_asc(clien
         headers=headers,
     )
 
-    response = await client.get(f"/fuel-cost-configs?uuid={config_uuid}", headers=headers)
+    response = await client.get("/fuel-cost-configs?truck_type=Flatbed", headers=headers)
     assert response.status_code == 200
     data = response.json()
-    assert data["total"] == 2
-    versions = [item["version"] for item in data["data"]]
-    assert versions == sorted(versions)
+    # Should return only 1 entry (latest version) for this uuid
+    flatbed_entries = [item for item in data if item["uuid"] == config_uuid]
+    assert len(flatbed_entries) == 1
+    assert flatbed_entries[0]["version"] == 2
 
 
 @pytest.mark.asyncio
@@ -106,13 +108,14 @@ async def test_list_with_wrong_role_returns_403(client, clean_table) -> None:
     import httpx
 
     casdoor_url = os.environ.get("CASDOOR_URL", "http://localhost:8000")
+    client_secret = os.environ.get("CASDOOR_CLIENT_SECRET", "transport-deluxe-secret")
     async with httpx.AsyncClient() as http:
         resp = await http.post(
             f"{casdoor_url}/api/login/oauth/access_token",
             data={
                 "grant_type": "password",
                 "client_id": "transport-deluxe-client",
-                "client_secret": "transport-deluxe-secret",
+                "client_secret": client_secret,
                 "username": "test-margin-configurator",
                 "password": "test123",
                 "scope": "openid profile",

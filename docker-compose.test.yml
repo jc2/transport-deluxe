@@ -37,6 +37,11 @@ services:
       DB_SCHEMA: fuel_cost_config
       CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
       CASDOOR_ISSUER: http://localhost:8000
+      CASDOOR_INTERNAL_URL: http://casdoor:8000
+      CASDOOR_AUDIENCE: ${CASDOOR_AUDIENCE}
+      CASDOOR_CLIENT_ID: ${CASDOOR_CLIENT_ID}
+      CASDOOR_CLIENT_SECRET: ${CASDOOR_CLIENT_SECRET}
+      SESSION_SECRET: ${FUEL_COST_SESSION_SECRET}
       CASDOOR_URL: http://casdoor:8000
 
   driver-tariff-config-tests:

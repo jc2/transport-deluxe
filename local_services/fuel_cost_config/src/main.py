@@ -1,17 +1,21 @@
 import logging
-import logging.config
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastmcp.utilities.lifespan import combine_lifespans
 from sqladmin import Admin
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
+import src.modules.fuel_cost_config.mcp_tools  # noqa: F401
 from src.modules.fuel_cost_config.admin import FuelCostConfigAdmin
+from src.modules.fuel_cost_config.exceptions import ConfigNotFoundError, DuplicateConfigError
+from src.modules.fuel_cost_config.mcp_server import mcp
 from src.modules.fuel_cost_config.router import router
 from src.tools.admin_auth import AdminAuth
-from src.tools.auth import fetch_jwks
 from src.tools.db import engine
 
 logging.basicConfig(
@@ -36,46 +40,53 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         raise RuntimeError(f"Migration failed: {result.stderr}")
     logger.info("Alembic migrations applied")
 
-    await fetch_jwks()
     yield
 
 
-app = FastAPI(title="Fuel Cost Configuration Service", lifespan=lifespan)
+mcp_app = mcp.http_app(path="/mcp", transport="streamable-http")
 
-admin_auth = AdminAuth(secret_key=os.environ.get("SESSION_SECRET", "super-secret-key"))
+app = FastAPI(title="Fuel Cost Configuration Service", lifespan=combine_lifespans(lifespan, mcp_app.lifespan))
+
+admin_auth = AdminAuth(secret_key=os.environ["SESSION_SECRET"])
 admin = Admin(app, engine, authentication_backend=admin_auth)
 admin.add_view(FuelCostConfigAdmin)
 
 
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
-    if isinstance(exc.detail, dict):
-        content = exc.detail
+# ---------------------------------------------------------------------------
+# Global exception handlers — ALL responses use {"messages": [...]}
+# ---------------------------------------------------------------------------
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+    if isinstance(exc.detail, dict) and "messages" in exc.detail:
+        messages = exc.detail["messages"]
     else:
-        content = {"status": exc.status_code, "messages": [str(exc.detail)]}
-    return JSONResponse(status_code=exc.status_code, content=content)
+        messages = [str(exc.detail)]
+    return JSONResponse(status_code=exc.status_code, content={"messages": messages})
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    messages = [f"{' -> '.join(str(loc) for loc in e['loc'])}: {e['msg']}" for e in exc.errors()]
+    return JSONResponse(status_code=422, content={"messages": messages})
+
+
+@app.exception_handler(ConfigNotFoundError)
+async def config_not_found_handler(request: Request, exc: ConfigNotFoundError) -> JSONResponse:
+    return JSONResponse(status_code=404, content={"messages": [str(exc)]})
+
+
+@app.exception_handler(DuplicateConfigError)
+async def duplicate_config_handler(request: Request, exc: DuplicateConfigError) -> JSONResponse:
+    return JSONResponse(status_code=409, content={"messages": [str(exc)]})
 
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    from sqlalchemy.exc import IntegrityError
-
-    if isinstance(exc, IntegrityError):
-        orig_type = type(exc.orig).__name__ if exc.orig else ""
-        if "UniqueViolation" in orig_type or "unique" in str(exc.orig).lower():
-            logger.warning("Unique constraint violation: %s", exc)
-            return JSONResponse(
-                status_code=409,
-                content={
-                    "status": 409,
-                    "messages": ["An active configuration already exists for this combination"],
-                },
-            )
     logger.error("Unhandled exception: %s", exc, exc_info=True)
-    return JSONResponse(
-        status_code=503,
-        content={"status": 503, "messages": ["Service temporarily unavailable"]},
-    )
+    return JSONResponse(status_code=503, content={"messages": ["Service temporarily unavailable"]})
 
 
 app.include_router(router, prefix="/fuel-cost-configs")
+app.mount("/", mcp_app)

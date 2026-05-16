@@ -5,6 +5,9 @@
     },
     "lead_time_config": {
       "url": "http://localhost:8004/mcp"
+    },
+    "fuel_cost_config": {
+      "url": "http://localhost:8001/mcp"
     }
   }
 }

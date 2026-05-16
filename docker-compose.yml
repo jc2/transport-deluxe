@@ -65,7 +65,12 @@ services:
       DB_SCHEMA: fuel_cost_config
       CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
       CASDOOR_ISSUER: http://localhost:8000
-      SESSION_SECRET: your-session-secret-key-here
+      CASDOOR_INTERNAL_URL: http://casdoor:8000
+      CASDOOR_AUDIENCE: ${CASDOOR_AUDIENCE}
+      CASDOOR_CLIENT_ID: transport-deluxe-client
+      CASDOOR_CLIENT_SECRET: ${CASDOOR_CLIENT_SECRET}
+      SERVICE_BASE_URL: http://localhost:8001
+      SESSION_SECRET: ${FUEL_COST_SESSION_SECRET:-your-session-secret-key-here}
 
   driver-tariff-config:
     build: ./local_services/driver_tariff_config

@@ -10,20 +10,19 @@ from src.main import app
 
 CASDOOR_URL = os.environ.get("CASDOOR_URL", "http://localhost:8000")
 CLIENT_ID = "transport-deluxe-client"
-CLIENT_SECRET = "transport-deluxe-secret"
+CLIENT_SECRET = os.environ.get("CASDOOR_CLIENT_SECRET", "transport-deluxe-secret")
 
 
 @pytest_asyncio.fixture(scope="session")
-async def test_db() -> None:
-    url = os.environ["DATABASE_URL"]
+async def test_db():
+    url = os.environ.get("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/fuel_cost_config_test")
     engine = create_async_engine(url, echo=False, poolclass=NullPool)
 
-    from sqlalchemy import text
     from sqlmodel import SQLModel
-    from src.modules.fuel_cost_config.models import FuelCostConfig  # noqa: F401
+    from src.modules.fuel_cost_config.models import FuelCostConfig  # noqa: F401 (registers SQLModel table metadata)
 
     async with engine.begin() as conn:
-        await conn.execute(text("DROP INDEX IF EXISTS uq_fcc_active_combination;"))
+        await conn.run_sync(SQLModel.metadata.drop_all)
         await conn.run_sync(SQLModel.metadata.create_all)
 
     yield engine
@@ -62,13 +61,6 @@ async def auth_token():
         return data["access_token"]
 
 
-@pytest_asyncio.fixture(scope="session", autouse=True)
-async def load_jwks():
-    from src.tools.auth import fetch_jwks
-
-    await fetch_jwks()
-
-
 @pytest_asyncio.fixture(scope="function")
 async def client(test_db):
     from src.tools import db as db_module
@@ -78,3 +70,18 @@ async def client(test_db):
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+
+@pytest_asyncio.fixture(scope="function")
+async def mcp_client(test_db, clean_table):
+    from fastmcp import Client
+    from src.modules.fuel_cost_config import mcp_tools as _  # noqa: F401 — registers tools on mcp
+    from src.modules.fuel_cost_config import repo as repo_module
+    from src.modules.fuel_cost_config.mcp_server import mcp
+    from src.tools import db as db_module
+
+    db_module.engine = test_db
+    repo_module  # ensure module is imported so engine reference is live
+
+    async with Client(mcp) as c:
+        yield c

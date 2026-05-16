@@ -1,92 +1,68 @@
 import uuid as uuid_lib
-from typing import Annotated, Any
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Response
-from sqlmodel.ext.asyncio.session import AsyncSession
+from fastapi import APIRouter, Depends, Query, status
 
-from src.modules.fuel_cost_config import service
-from src.modules.fuel_cost_config.models import (
-    CreateRequest,
-    FuelCostConfigResponse,
-    PaginatedResponse,
-    ResolveRequest,
-    TruckType,
-    UpdateRequest,
+from ...tools.auth import VerifiedJwt
+from .models import CreateRequest, FuelCostConfigResponse, ResolveRequest, TruckType, UpdateRequest
+from .service import (
+    create_fuel_cost_config,
+    delete_fuel_cost_config,
+    get_fuel_cost_config,
+    list_fuel_cost_configs,
+    resolve_fuel_cost_config,
+    update_fuel_cost_config,
 )
-from src.tools.auth import verify_jwt
-from src.tools.db import get_session
-
-router = APIRouter()
-
-SessionDep = Annotated[AsyncSession, Depends(get_session)]
-JwtDep = Annotated[dict[str, Any], Depends(verify_jwt)]
 
 
-@router.get("", response_model=PaginatedResponse[FuelCostConfigResponse])
+class ListFilterParams:
+    def __init__(
+        self,
+        customer_name: str | None = Query(None),
+        customer_subname: str | None = Query(None),
+        truck_type: TruckType | None = Query(None),
+    ):
+        self.customer_name = customer_name
+        self.customer_subname = customer_subname
+        self.truck_type = truck_type
+
+
+router = APIRouter(tags=["Fuel Cost Configuration"])
+
+
+@router.post("", response_model=FuelCostConfigResponse, status_code=status.HTTP_201_CREATED)
+async def create_config(req: CreateRequest, jwt: VerifiedJwt) -> FuelCostConfigResponse:
+    created_by = jwt.get("preferred_username") or jwt.get("name") or jwt["sub"]
+    return await create_fuel_cost_config(req, created_by)
+
+
+@router.get("", response_model=list[FuelCostConfigResponse])
 async def list_configs(
-    session: SessionDep,
-    _jwt: JwtDep,
-    page: Annotated[int, Query(ge=1)] = 1,
-    page_size: Annotated[int, Query(ge=1, le=100)] = 20,
-    customer_name: Annotated[str | None, Query()] = None,
-    customer_subname: Annotated[str | None, Query()] = None,
-    truck_type: Annotated[TruckType | None, Query()] = None,
-    uuid: Annotated[uuid_lib.UUID | None, Query()] = None,
-) -> PaginatedResponse[FuelCostConfigResponse]:
-    return await service.list_configs(
-        session=session,
-        customer_name=customer_name,
-        customer_subname=customer_subname,
-        truck_type=truck_type,
-        uuid=uuid,
-        page=page,
-        page_size=page_size,
+    jwt: VerifiedJwt, filters: Annotated[ListFilterParams, Depends()]
+) -> list[FuelCostConfigResponse]:
+    return await list_fuel_cost_configs(
+        customer_name=filters.customer_name,
+        customer_subname=filters.customer_subname,
+        truck_type=filters.truck_type.value if filters.truck_type else None,
     )
 
 
 @router.get("/{uuid}", response_model=FuelCostConfigResponse)
-async def get_config(
-    uuid: uuid_lib.UUID,
-    session: SessionDep,
-    _jwt: JwtDep,
-) -> FuelCostConfigResponse:
-    return await service.get_config(session=session, uuid=uuid)
-
-
-@router.post("", response_model=FuelCostConfigResponse, status_code=201)
-async def create_config(
-    request: CreateRequest,
-    session: SessionDep,
-    jwt: JwtDep,
-) -> FuelCostConfigResponse:
-    created_by = jwt.get("name", "unknown")
-    return await service.create_config(session=session, request=request, created_by=created_by)
+async def get_config(uuid: uuid_lib.UUID, jwt: VerifiedJwt) -> FuelCostConfigResponse:
+    return await get_fuel_cost_config(uuid)
 
 
 @router.put("/{uuid}", response_model=FuelCostConfigResponse)
-async def update_config(
-    uuid: uuid_lib.UUID,
-    request: UpdateRequest,
-    session: SessionDep,
-    jwt: JwtDep,
-) -> FuelCostConfigResponse:
-    created_by = jwt.get("name", "unknown")
-    return await service.update_config(session=session, uuid=uuid, request=request, created_by=created_by)
+async def update_config(uuid: uuid_lib.UUID, req: UpdateRequest, jwt: VerifiedJwt) -> FuelCostConfigResponse:
+    created_by = jwt.get("preferred_username") or jwt.get("name") or jwt["sub"]
+    return await update_fuel_cost_config(uuid, req, created_by)
 
 
-@router.delete("/{uuid}", status_code=204)
-async def deactivate_config(
-    uuid: uuid_lib.UUID,
-    session: SessionDep,
-    _jwt: JwtDep,
-) -> Response:
-    await service.deactivate_config(session=session, uuid=uuid)
-    return Response(status_code=204)
+@router.delete("/{uuid}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_config(uuid: uuid_lib.UUID, jwt: VerifiedJwt) -> None:
+    await delete_fuel_cost_config(uuid)
 
 
 @router.post("/resolve", response_model=FuelCostConfigResponse)
-async def resolve_config(
-    request: ResolveRequest,
-    session: SessionDep,
-) -> FuelCostConfigResponse:
-    return await service.resolve_config(session=session, request=request)
+async def resolve_config(req: ResolveRequest) -> FuelCostConfigResponse:
+    return await resolve_fuel_cost_config(req)
