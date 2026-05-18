@@ -1,7 +1,6 @@
 # mypy: ignore-errors
 
 from sqladmin import ModelView
-
 from src.modules.driver_tariff_config.models import DriverTariffConfig
 
 

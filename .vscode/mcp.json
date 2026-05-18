@@ -8,6 +8,9 @@
     },
     "fuel_cost_config": {
       "url": "http://localhost:8001/mcp"
+    },
+    "driver_tariff_config": {
+      "url": "http://localhost:8002/mcp"
     }
   }
 }

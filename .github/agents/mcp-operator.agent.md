@@ -1,7 +1,7 @@
 ---
 name: "MCP Operator"
 description: "General-purpose MCP orchestrator for Transport Deluxe. Use when managing business configurations, resolving pricing/margin data, or executing operations across one or multiple MCP servers — without touching source code. Triggers on: 'configure', 'set margin', 'resolve margin', 'delete config', 'MCP', 'pricing config', 'base margin', 'tariff', 'fuel cost', 'lead time'."
-tools: [todo, base_margin_config/*, lead_time_config/*, fuel_cost_config/*]
+tools: [todo, base_margin_config/*, lead_time_config/*, fuel_cost_config/*, driver_tariff_config/*]
 user-invocable: true
 ---
 
@@ -21,6 +21,8 @@ Available MCP servers this session:
     tools: [get_all_configs_tool, get_config_tool, set_lead_time_config, delete_lead_time_config_tool, resolve_applicable_lead_time]
 - fuel_cost_config:
     tools: [get_all_configs_tool, get_config_tool, set_fuel_cost_config, delete_fuel_cost_config_tool, resolve_applicable_fuel_cost]
+- driver_tariff_config:
+    tools: [get_all_configs_tool, get_config_tool, set_driver_tariff_config,
 ```
 
 ## MCP Catalog
@@ -57,6 +59,14 @@ Authoritative reference for all MCP tools. Do NOT assume capabilities beyond wha
 | `delete_fuel_cost_config_tool` | write | Permanently delete a configuration by UUID |
 | `resolve_applicable_fuel_cost` | read | Find the fuel cost that applies to a given customer/lane context |
 
+### driver_tariff_config
+| Tool | Type | Description |
+|------|------|-------------|
+| `get_all_configs_tool` | read | List all active driver tariff configurations |
+| `get_config_tool` | read | Get a single configuration by UUID |
+| `set_driver_tariff_config` | write | Create or update a driver tariff rule for a customer lane |
+| `delete_driver_tariff_config_tool` | write | Permanently delete a configuration by UUID |
+
 ---
 
 *When a new MCP server is added, update this catalog with its tools.*
@@ -64,8 +74,8 @@ Authoritative reference for all MCP tools. Do NOT assume capabilities beyond wha
 ## Tool Priority
 
 When multiple tools could satisfy a request, prefer:
-1. **Read tools first** (`get_all_configs_tool`, `get_config_tool`, `resolve_applicable_margin`, `resolve_applicable_lead_time`, `resolve_applicable_fuel_cost`) — use to fetch context before any mutation.
-2. **Write tools only when needed** (`set_base_margin_config`, `delete_base_margin_config_tool`, `set_lead_time_config`, `delete_lead_time_config_tool`, `set_fuel_cost_config`, `delete_fuel_cost_config_tool`) — always confirm with the user before destructive operations.
+1. **Read tools first** (`get_all_configs_tool`, `get_config_tool`, `resolve_applicable_margin`, `resolve_applicable_lead_time`, `resolve_applicable_fuel_cost`, `resolve_applicable_driver_tariff`) — use to fetch context before any mutation.
+2. **Write tools only when needed** (`set_base_margin_config`, `delete_base_margin_config_tool`, `set_lead_time_config`, `delete_lead_time_config_tool`, `set_fuel_cost_config`, `delete_fuel_cost_config_tool`, `set_driver_tariff_config`, `delete_driver_tariff_config_tool`) — always confirm with the user before destructive operations.
 
 ## Constraints
 

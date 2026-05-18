@@ -58,6 +58,11 @@ services:
       DB_SCHEMA: driver_tariff_config
       CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
       CASDOOR_ISSUER: http://localhost:8000
+      CASDOOR_INTERNAL_URL: http://casdoor:8000
+      CASDOOR_AUDIENCE: ${CASDOOR_AUDIENCE}
+      CASDOOR_CLIENT_ID: ${CASDOOR_CLIENT_ID}
+      CASDOOR_CLIENT_SECRET: ${CASDOOR_CLIENT_SECRET}
+      SESSION_SECRET: ${DRIVER_TARIFF_SESSION_SECRET:-test-secret}
       CASDOOR_URL: http://casdoor:8000
 
   base-margin-config-tests:

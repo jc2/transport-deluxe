@@ -1,273 +1,131 @@
 import logging
 import uuid as uuid_lib
 
-from fastapi import HTTPException
-from sqlalchemy import func, text
-from sqlalchemy.exc import IntegrityError
-from sqlmodel import col, select
-from sqlmodel.ext.asyncio.session import AsyncSession
-
-from src.modules.driver_tariff_config.models import (
-    CreateRequest,
-    DriverTariffConfig,
-    DriverTariffConfigResponse,
-    PaginatedResponse,
-    ResolveRequest,
-    UpdateRequest,
-)
+from . import repo
+from .exceptions import ConfigNotFoundError, DuplicateConfigError
+from .models import CreateRequest, DriverTariffConfig, DriverTariffConfigResponse, ResolveRequest, UpdateRequest
 
 logger = logging.getLogger(__name__)
 
 
-async def list_configs(
-    session: AsyncSession,
-    pickup_state: str | None,
-    drop_state: str | None,
-    uuid: uuid_lib.UUID | None,
-    page: int,
-    page_size: int,
-) -> PaginatedResponse[DriverTariffConfigResponse]:
-    stmt = select(DriverTariffConfig)
-
-    if uuid is None:
-        # Get only the latest version for each uuid using DISTINCT ON
-        stmt = stmt.distinct(col(DriverTariffConfig.uuid)).order_by(
-            col(DriverTariffConfig.uuid), col(DriverTariffConfig.version).desc()
-        )
-    else:
-        stmt = stmt.order_by(col(DriverTariffConfig.version).asc())
-
-    if pickup_state is not None:
-        stmt = stmt.where(DriverTariffConfig.pickup_state == pickup_state)
-    if drop_state is not None:
-        stmt = stmt.where(DriverTariffConfig.drop_state == drop_state)
-
-    count_stmt = select(func.count()).select_from(stmt.subquery())
-    total_result = await session.exec(count_stmt)
-    total = total_result.one()
-
-    stmt = stmt.offset((page - 1) * page_size).limit(page_size)
-    result = await session.exec(stmt)
-    rows = result.all()
-
-    total_pages = max(1, (total + page_size - 1) // page_size)
-
-    logger.info("list_configs returned %d items (page=%d)", len(rows), page)
-    return PaginatedResponse(
-        data=[DriverTariffConfigResponse.from_orm_row(r) for r in rows],
-        page=page,
-        page_size=page_size,
-        total=total,
-        total_pages=total_pages,
+async def create_driver_tariff_config(req: CreateRequest, created_by: str = "admin") -> DriverTariffConfigResponse:
+    count = await repo.count_matching(
+        pickup_state=req.pickup_state,
+        drop_state=req.drop_state,
     )
-
-
-async def get_config(
-    session: AsyncSession,
-    uuid: uuid_lib.UUID,
-) -> DriverTariffConfigResponse:
-    stmt = (
-        select(DriverTariffConfig)
-        .where(DriverTariffConfig.uuid == uuid)  # noqa: E712
-        .order_by(col(DriverTariffConfig.version).desc())
-        .limit(1)
-    )
-    result = await session.exec(stmt)
-    row = result.first()
-    if row is None:
-        raise HTTPException(
-            status_code=404,
-            detail={
-                "status": 404,
-                "messages": ["No active configuration found for this UUID"],
-            },
-        )
-    logger.info("get_config found uuid=%s version=%s", uuid, row.version)
-    return DriverTariffConfigResponse.from_orm_row(row)
-
-
-async def create_config(
-    session: AsyncSession,
-    request: CreateRequest,
-    created_by: str,
-) -> DriverTariffConfigResponse:
-    stmt = (
-        select(func.count())
-        .select_from(DriverTariffConfig)
-        .where(
-            DriverTariffConfig.pickup_state == request.pickup_state,
-            DriverTariffConfig.drop_state == request.drop_state,
-        )
-    )
-    count_result = await session.exec(stmt)
-    if count_result.one() > 0:
-        raise HTTPException(
-            status_code=409,
-            detail={
-                "status": 409,
-                "messages": ["A configuration already exists for this pickup and drop state combination"],
-            },
+    if count > 0:
+        raise DuplicateConfigError(
+            "A Driver Tariff Configuration already exists for this pickup and drop state combination."
         )
 
-    new_uuid = uuid_lib.uuid4()
-    row = DriverTariffConfig(
-        uuid=new_uuid,
+    dao = DriverTariffConfig(
+        uuid=uuid_lib.uuid4(),
         version=1,
-        pickup_state=request.pickup_state,
-        drop_state=request.drop_state,
-        tariff_factor=request.tariff_factor,
+        pickup_state=req.pickup_state,
+        drop_state=req.drop_state,
+        tariff_factor=req.tariff_factor,
         created_by=created_by,
     )
-    session.add(row)
-    try:
-        await session.commit()
-    except IntegrityError:
-        await session.rollback()
-        raise HTTPException(
-            status_code=409,
-            detail={
-                "status": 409,
-                "messages": ["An active configuration already exists for this combination"],
-            },
-        )
-    await session.refresh(row)
-
+    saved = await repo.save_config(dao)
     logger.info(
-        "create_config created uuid=%s created_by=%s",
-        new_uuid,
+        "create_driver_tariff_config uuid=%s pickup=%s drop=%s created_by=%s",
+        saved.uuid,
+        saved.pickup_state,
+        saved.drop_state,
         created_by,
     )
-    return DriverTariffConfigResponse.from_orm_row(row)
+    return DriverTariffConfigResponse.from_dao(saved)
 
 
-async def update_config(
-    session: AsyncSession,
-    uuid: uuid_lib.UUID,
-    request: UpdateRequest,
-    created_by: str,
-) -> DriverTariffConfigResponse:
-    stmt = (
-        select(DriverTariffConfig)
-        .where(DriverTariffConfig.uuid == uuid)  # noqa: E712
-        .order_by(col(DriverTariffConfig.version).desc())
-        .limit(1)
-        .with_for_update()
+async def list_driver_tariff_configs(
+    pickup_state: str | None = None,
+    drop_state: str | None = None,
+) -> list[DriverTariffConfigResponse]:
+    records = await repo.list_configs(
+        pickup_state=pickup_state,
+        drop_state=drop_state,
     )
-    result = await session.exec(stmt)
-    current = result.first()
-    if current is None:
-        raise HTTPException(
-            status_code=404,
-            detail={
-                "status": 404,
-                "messages": ["No active configuration found for this UUID"],
-            },
-        )
+    return [DriverTariffConfigResponse.from_dao(r) for r in records]
 
-    new_version = current.version + 1
+
+async def get_driver_tariff_config(uuid_val: uuid_lib.UUID) -> DriverTariffConfigResponse:
+    record = await repo.get_config(uuid_val)
+    return DriverTariffConfigResponse.from_dao(record)
+
+
+async def update_driver_tariff_config(
+    uuid_val: uuid_lib.UUID,
+    req: UpdateRequest,
+    created_by: str = "admin",
+) -> DriverTariffConfigResponse:
+    current = await repo.get_config(uuid_val)  # raises ConfigNotFoundError if missing
+
     new_row = DriverTariffConfig(
-        uuid=uuid,
-        version=new_version,
+        uuid=uuid_val,
+        version=current.version + 1,
         pickup_state=current.pickup_state,
         drop_state=current.drop_state,
-        tariff_factor=request.tariff_factor,
+        tariff_factor=req.tariff_factor,
         created_by=created_by,
     )
-    session.add(new_row)
-    await session.commit()
-    await session.refresh(new_row)
-
+    saved = await repo.save_config(new_row)
     logger.info(
-        "update_config uuid=%s new_version=%s created_by=%s",
-        uuid,
-        new_version,
+        "update_driver_tariff_config uuid=%s new_version=%s created_by=%s",
+        uuid_val,
+        saved.version,
         created_by,
     )
-    return DriverTariffConfigResponse.from_orm_row(new_row)
+    return DriverTariffConfigResponse.from_dao(saved)
 
 
-async def deactivate_config(
-    session: AsyncSession,
-    uuid: uuid_lib.UUID,
-) -> None:
-    stmt = (
-        select(DriverTariffConfig).where(DriverTariffConfig.uuid == uuid)  # noqa: E712
-    )
-    result = await session.exec(stmt)
-    rows = result.all()
-    if not rows:
-        raise HTTPException(
-            status_code=404,
-            detail={
-                "status": 404,
-                "messages": ["No active configuration found for this UUID"],
-            },
-        )
-
-    for row in rows:
-        await session.delete(row)
-    await session.commit()
-    logger.info("deactivate_config deleted uuid=%s entirely", uuid)
+async def delete_driver_tariff_config(uuid_val: uuid_lib.UUID) -> None:
+    await repo.delete_config(uuid_val)
+    logger.info("delete_driver_tariff_config uuid=%s", uuid_val)
 
 
-async def resolve_config(
-    session: AsyncSession,
-    request: ResolveRequest,
-) -> DriverTariffConfigResponse:
-    pickup_state = request.load.route.pickup.state
-    drop_state = request.load.route.drop.state
+async def resolve_driver_tariff_config(req: ResolveRequest) -> DriverTariffConfigResponse:
+    pickup_state = req.load.route.pickup.state
+    drop_state = req.load.route.drop.state
 
-    # specific match (both states) = priority 1
-    # origin default (pickup, no drop) = priority 2
-    # destination default (no pickup, drop) = priority 3
-    # distinct on uuid using greatest version
+    all_configs = await repo.get_all_active_configs()
 
-    stmt = text("""
-        SELECT uuid, version, pickup_state, drop_state, tariff_factor, created_by, created_at
-        FROM driver_tariff_config
-        WHERE (pickup_state = :pickup_state AND drop_state = :drop_state)
-           OR (pickup_state = :pickup_state AND drop_state IS NULL)
-           OR (pickup_state IS NULL AND drop_state = :drop_state)
-           OR (pickup_state IS NULL AND drop_state IS NULL)
-        ORDER BY
-            CASE
-                WHEN pickup_state = :pickup_state AND drop_state = :drop_state THEN 1
-                WHEN pickup_state = :pickup_state AND drop_state IS NULL THEN 2
-                WHEN pickup_state IS NULL AND drop_state = :drop_state THEN 3
-                WHEN pickup_state IS NULL AND drop_state IS NULL THEN 4
-            END,
-            version DESC
-        LIMIT 1
-    """)
+    # A config is a candidate if its specific states match the request,
+    # or if a state is None (wildcard).
+    valid_matches: list[DriverTariffConfig] = []
+    for c in all_configs:
+        if c.pickup_state is not None and c.pickup_state != pickup_state:
+            continue
+        if c.drop_state is not None and c.drop_state != drop_state:
+            continue
+        valid_matches.append(c)
 
-    result = await session.exec(  # type: ignore[call-overload]
-        stmt.bindparams(
-            pickup_state=pickup_state,
-            drop_state=drop_state,
-        )
-    )
-    row = result.first()
-
-    if row is None:
+    if not valid_matches:
         logger.warning(
-            "resolve_config found no match for Route %s -> %s",
+            "resolve_driver_tariff_config found no match for %s -> %s",
             pickup_state,
             drop_state,
         )
-        raise HTTPException(
-            status_code=404,
-            detail={
-                "status": 404,
-                "messages": ["No configuration resolves for this route combination"],
-            },
-        )
+        raise ConfigNotFoundError(f"No driver tariff configuration found for route {pickup_state} -> {drop_state}.")
 
-    return DriverTariffConfigResponse(
-        uuid=row.uuid,
-        version=row.version,
-        pickup_state=row.pickup_state,
-        drop_state=row.drop_state,
-        tariff_factor=row.tariff_factor,
-        created_by=row.created_by,
-        created_at=row.created_at,
+    def get_specificity(c: DriverTariffConfig) -> int:
+        # Higher = more specific = wins
+        has_pickup = c.pickup_state is not None
+        has_drop = c.drop_state is not None
+        if has_pickup and has_drop:
+            return 4  # exact route match
+        elif has_pickup:
+            return 3  # origin default
+        elif has_drop:
+            return 2  # destination default
+        else:
+            return 1  # global fallback
+
+    best = max(valid_matches, key=lambda c: (get_specificity(c), c.version))
+    logger.info(
+        "resolve_driver_tariff_config matched uuid=%s version=%s for %s -> %s",
+        best.uuid,
+        best.version,
+        pickup_state,
+        drop_state,
     )
+    return DriverTariffConfigResponse.from_dao(best)

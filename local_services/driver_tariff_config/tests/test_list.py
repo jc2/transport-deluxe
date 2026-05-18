@@ -2,54 +2,46 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_list_pagination(client, auth_token, clean_table) -> None:
+async def test_list_returns_latest_versions(client, auth_token, clean_table) -> None:
     headers = {"Authorization": f"Bearer {auth_token}"}
 
-    # Create 5 items
-    for i in range(5):
+    # Create 3 configs
+    for state in ["TX", "CA", "NY"]:
         await client.post(
             "/driver-tariff-configs",
-            json={"pickup_state": f"ST{i}", "drop_state": "CA", "tariff_factor": f"1.{i}0"},
+            json={"pickup_state": state, "drop_state": None, "tariff_factor": "1.20"},
             headers=headers,
         )
 
-    # list page 1
-    resp1 = await client.get("/driver-tariff-configs?page=1&page_size=2", headers=headers)
-    data1 = resp1.json()
-    assert len(data1["data"]) == 2
-    assert data1["page"] == 1
-    assert data1["total"] == 5
-
-    # list page 3
-    resp3 = await client.get("/driver-tariff-configs?page=3&page_size=2", headers=headers)
-    data3 = resp3.json()
-    assert len(data3["data"]) == 1
-    assert data3["page"] == 3
+    resp = await client.get("/driver-tariff-configs", headers=headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert isinstance(data, list)
+    assert len(data) == 3
+    # Each item should have version == 1 (no updates yet)
+    assert all(item["version"] == 1 for item in data)
 
 
 @pytest.mark.asyncio
-async def test_list_include_inactive_with_uuid_returns_history_version_asc(client, auth_token, clean_table) -> None:
+async def test_list_filter_by_pickup_state(client, auth_token, clean_table) -> None:
     headers = {"Authorization": f"Bearer {auth_token}"}
-    create_resp = await client.post(
+
+    await client.post(
         "/driver-tariff-configs",
         json={"pickup_state": "TX", "drop_state": "CA", "tariff_factor": "1.50"},
         headers=headers,
     )
-    assert create_resp.status_code == 201
-    config_uuid = create_resp.json()["uuid"]
-
-    await client.put(
-        f"/driver-tariff-configs/{config_uuid}",
-        json={"tariff_factor": "1.60"},
+    await client.post(
+        "/driver-tariff-configs",
+        json={"pickup_state": "NY", "drop_state": "FL", "tariff_factor": "1.30"},
         headers=headers,
     )
 
-    response = await client.get(f"/driver-tariff-configs?uuid={config_uuid}", headers=headers)
-    assert response.status_code == 200
-    data = response.json()
-    assert data["total"] == 2
-    versions = [item["version"] for item in data["data"]]
-    assert versions == sorted(versions)
+    resp = await client.get("/driver-tariff-configs?pickup_state=TX", headers=headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data) == 1
+    assert data[0]["pickup_state"] == "TX"
 
 
 @pytest.mark.asyncio
@@ -65,13 +57,14 @@ async def test_list_with_wrong_role_returns_403(client, clean_table) -> None:
     import httpx
 
     casdoor_url = os.environ.get("CASDOOR_URL", "http://localhost:8000")
+    client_secret = os.environ.get("CASDOOR_CLIENT_SECRET", "transport-deluxe-secret")
     async with httpx.AsyncClient() as http:
         resp = await http.post(
             f"{casdoor_url}/api/login/oauth/access_token",
             data={
                 "grant_type": "password",
                 "client_id": "transport-deluxe-client",
-                "client_secret": "transport-deluxe-secret",
+                "client_secret": client_secret,
                 "username": "test-margin-configurator",
                 "password": "test123",
                 "scope": "openid profile",
