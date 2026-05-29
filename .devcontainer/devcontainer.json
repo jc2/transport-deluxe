@@ -4,6 +4,7 @@
   "service": "transport-deluxe-core",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "remoteUser": "root",
+  "updateRemoteUserUID": false,
   "overrideCommand": true,
   "forwardPorts": [
     5050,
