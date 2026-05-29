@@ -194,6 +194,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      casdoor:
+        condition: service_healthy
       costing-engine:
         condition: service_started
       margin-engine:
@@ -202,3 +204,21 @@ services:
         condition: service_started
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres/transport_deluxe
+      CASDOOR_JWKS_URL: http://casdoor:8000/.well-known/jwks
+      CASDOOR_ISSUER: http://localhost:8000
+      CASDOOR_INTERNAL_URL: http://casdoor:8000
+      CASDOOR_AUDIENCE: ${CASDOOR_AUDIENCE}
+      CASDOOR_CLIENT_ID: transport-deluxe-client
+      CASDOOR_CLIENT_SECRET: ${CASDOOR_CLIENT_SECRET}
+      SERVICE_BASE_URL: http://localhost:8008
+      SESSION_SECRET: ${TRANSPORT_DELUXE_CORE_SESSION_SECRET:-your-session-secret-key-here}
+
+  devcontainer:
+    image: mcr.microsoft.com/devcontainers/python:3.12
+    volumes:
+      - .:/workspace:cached
+    working_dir: /workspace
+    command: sleep infinity
+    depends_on:
+      transport-deluxe-core:
+        condition: service_started

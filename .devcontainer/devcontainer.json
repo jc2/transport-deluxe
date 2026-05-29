@@ -1,11 +1,10 @@
 {
   "name": "Transport Deluxe DevPod",
   "dockerComposeFile": ["../docker-compose.yml"],
-  "service": "transport-deluxe-core",
+  "service": "devcontainer",
   "workspaceFolder": "/workspace",
-  "containerUser": "root",
-  "remoteUser": "root",
   "overrideCommand": true,
+  "postCreateCommand": "pip install uv && uv sync --all-packages",
   "forwardPorts": [
     5050,
     8000,
