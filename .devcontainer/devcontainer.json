@@ -1,0 +1,50 @@
+{
+  "name": "Transport Deluxe DevPod",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "transport-deluxe-core",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "forwardPorts": [
+    5050,
+    8000,
+    8001,
+    8002,
+    8003,
+    8004,
+    8005,
+    8006,
+    8007,
+    8008
+  ],
+  "portsAttributes": {
+    "5050": {
+      "label": "pgAdmin Database Manager"
+    },
+    "8000": {
+      "label": "Casdoor SSO Auth"
+    },
+    "8001": {
+      "label": "Fuel Cost Config Service"
+    },
+    "8002": {
+      "label": "Driver Tariff Config Service"
+    },
+    "8003": {
+      "label": "Base Margin Config Service"
+    },
+    "8004": {
+      "label": "Lead Time Config Service"
+    },
+    "8005": {
+      "label": "Costing Engine"
+    },
+    "8006": {
+      "label": "Margin Engine"
+    },
+    "8007": {
+      "label": "Pricing Engine"
+    },
+    "8008": {
+      "label": "Transport Deluxe Core Backend"
+    }
+  }
+}
