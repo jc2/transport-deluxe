@@ -1,12 +1,10 @@
 {
   "name": "Transport Deluxe DevPod",
-  "dockerComposeFile": [
-    "../docker-compose.yml"
-  ],
+  "dockerComposeFile": "../docker-compose.yml",
   "service": "transport-deluxe-core",
-  "workspaceFolder": "/workspace",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "remoteUser": "root",
+  "overrideCommand": true,
   "forwardPorts": [
     5050,
     8000,
