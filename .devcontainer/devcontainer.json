@@ -4,6 +4,13 @@
   "service": "devcontainer",
   "workspaceFolder": "/workspace",
   "overrideCommand": true,
+  "remoteUser": "root",
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
   "postCreateCommand": "pip install uv && uv sync --all-packages",
   "forwardPorts": [
     5050,
