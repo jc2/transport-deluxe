@@ -5,10 +5,14 @@
   "workspaceFolder": "/workspace",
   "overrideCommand": true,
   "remoteUser": "root",
+  "remoteEnv": {
+    "COMPOSE_PROJECT_NAME": "transport-deluxe"
+  },
   "mounts": [
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
-  "postCreateCommand": "apt-get update && apt-get install -y docker.io && pip install uv && uv sync --all-packages",
+  "postCreateCommand": "apt-get update && apt-get install -y docker.io docker-compose && cp ~/.env /workspace/.env 2>/dev/null || true && pip install uv && uv sync --all-packages",
+  "postStartCommand": "bash /workspace/.devcontainer/setup-ports.sh",
   "forwardPorts": [
     5050,
     8000,
@@ -20,37 +24,5 @@
     8006,
     8007,
     8008
-  ],
-  "portsAttributes": {
-    "5050": {
-      "label": "pgAdmin Database Manager"
-    },
-    "8000": {
-      "label": "Casdoor SSO Auth"
-    },
-    "8001": {
-      "label": "Fuel Cost Config Service"
-    },
-    "8002": {
-      "label": "Driver Tariff Config Service"
-    },
-    "8003": {
-      "label": "Base Margin Config Service"
-    },
-    "8004": {
-      "label": "Lead Time Config Service"
-    },
-    "8005": {
-      "label": "Costing Engine"
-    },
-    "8006": {
-      "label": "Margin Engine"
-    },
-    "8007": {
-      "label": "Pricing Engine"
-    },
-    "8008": {
-      "label": "Transport Deluxe Core Backend"
-    }
-  }
+  ]
 }
