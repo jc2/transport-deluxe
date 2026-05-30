@@ -9,6 +9,7 @@
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
   "postCreateCommand": "apt-get update && apt-get install -y docker.io && pip install uv && uv sync --all-packages",
+  "postStartCommand": "bash /workspace/.devcontainer/setup-ports.sh",
   "forwardPorts": [
     5050,
     8000,
